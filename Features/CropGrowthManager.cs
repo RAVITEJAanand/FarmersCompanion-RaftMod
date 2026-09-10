@@ -52,6 +52,10 @@ namespace FarmersCompanion.Features
         }
         #endregion [END] UNITY LIFECYCLE
 
+        private readonly System.Collections.Generic.List<Cropplot> _cachedPlots = new System.Collections.Generic.List<Cropplot>();
+        private float _lastPlotsScanTime = -30f;
+        private const float PLOTS_SCAN_INTERVAL = 12f;
+
         #region [START] GROWTH ACCELERATION COROUTINE
         private IEnumerator GrowthBoostLoop()
         {
@@ -67,29 +71,52 @@ namespace FarmersCompanion.Features
                 Vector3 playerPos = player.transform.position;
                 float radiusSqr = GrowthRadius * GrowthRadius;
 
-                Plant[] plants = FindObjectsOfType<Plant>();
-                if (plants == null || plants.Length == 0) continue;
-
-                foreach (var plant in plants)
+                // Refresh cached cropplots periodically instead of scanning scene for all plants
+                if (Time.unscaledTime - _lastPlotsScanTime > PLOTS_SCAN_INTERVAL || _cachedPlots.Count == 0)
                 {
-                    if (plant == null || plant.FullyGrown()) continue;
-
-                    if ((plant.transform.position - playerPos).sqrMagnitude > radiusSqr) continue;
-
-                    // Calculate multiplier
-                    bool isTree = plant is Plant_Palm || (plant.growTime > 180f);
-                    float mult = isTree ? (EnableTreeGrowthBoost ? TreeGrowthMultiplier : 1.0f) : CropGrowthMultiplier;
-
-                    if (EnableFertilizerBoost)
+                    _lastPlotsScanTime = Time.unscaledTime;
+                    _cachedPlots.Clear();
+                    var found = FindObjectsOfType<Cropplot>();
+                    if (found != null && found.Length > 0)
                     {
-                        mult *= FertilizerExtraMultiplier;
+                        _cachedPlots.AddRange(found);
                     }
+                }
+                else
+                {
+                    _cachedPlots.RemoveAll(p => p == null);
+                }
 
-                    // Delta time added extra = (mult - 1.0) * interval
-                    float extraSeconds = (mult - 1.0f) * GrowthCheckIntervalSeconds;
-                    if (extraSeconds > 0f)
+                if (_cachedPlots.Count == 0) continue;
+
+                foreach (var plot in _cachedPlots)
+                {
+                    if (plot == null) continue;
+                    if ((plot.transform.position - playerPos).sqrMagnitude > radiusSqr) continue;
+
+                    var slots = plot.GetSlots();
+                    if (slots == null) continue;
+
+                    for (int s = 0; s < slots.Count; s++)
                     {
-                        plant.IncrementGrowTimer(extraSeconds);
+                        var plant = slots[s]?.plant;
+                        if (plant == null || plant.FullyGrown()) continue;
+
+                        // Calculate multiplier
+                        bool isTree = plant is Plant_Palm || (plant.growTime > 180f);
+                        float mult = isTree ? (EnableTreeGrowthBoost ? TreeGrowthMultiplier : 1.0f) : CropGrowthMultiplier;
+
+                        if (EnableFertilizerBoost)
+                        {
+                            mult *= FertilizerExtraMultiplier;
+                        }
+
+                        // Delta time added extra = (mult - 1.0) * interval
+                        float extraSeconds = (mult - 1.0f) * GrowthCheckIntervalSeconds;
+                        if (extraSeconds > 0f)
+                        {
+                            plant.IncrementGrowTimer(extraSeconds);
+                        }
                     }
                 }
             }

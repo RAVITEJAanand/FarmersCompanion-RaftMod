@@ -25,6 +25,9 @@ namespace FarmersCompanion.Features
         #endregion [END] CONFIGURATION PROPERTIES
 
         private Coroutine _waterRoutine;
+        private readonly List<Cropplot> _cachedPlots = new List<Cropplot>();
+        private float _lastPlotsScanTime = -30f;
+        private const float PLOTS_SCAN_INTERVAL = 12f;
 
         #region [START] UNITY LIFECYCLE
         private void Awake()
@@ -69,13 +72,27 @@ namespace FarmersCompanion.Features
                 Vector3 playerPos = player.transform.position;
                 float radiusSqr = WaterRadius * WaterRadius;
 
-                // Safely collect all active cropplots in world
-                Cropplot[] plots = FindObjectsOfType<Cropplot>();
-                if (plots == null || plots.Length == 0) continue;
+                // Refresh cached cropplots periodically instead of scanning scene every tick
+                if (Time.unscaledTime - _lastPlotsScanTime > PLOTS_SCAN_INTERVAL || _cachedPlots.Count == 0)
+                {
+                    _lastPlotsScanTime = Time.unscaledTime;
+                    _cachedPlots.Clear();
+                    var found = FindObjectsOfType<Cropplot>();
+                    if (found != null && found.Length > 0)
+                    {
+                        _cachedPlots.AddRange(found);
+                    }
+                }
+                else
+                {
+                    _cachedPlots.RemoveAll(p => p == null);
+                }
+
+                if (_cachedPlots.Count == 0) continue;
 
                 var plantManager = ComponentManager<PlantManager>.Value;
 
-                foreach (var plot in plots)
+                foreach (var plot in _cachedPlots)
                 {
                     if (plot == null) continue;
 

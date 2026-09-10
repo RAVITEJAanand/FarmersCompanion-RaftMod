@@ -47,6 +47,10 @@ namespace FarmersCompanion.Features
         }
         #endregion [END] UNITY LIFECYCLE
 
+        private readonly System.Collections.Generic.List<AI_NetworkBehaviour_Domestic_Resource> _cachedAnimals = new System.Collections.Generic.List<AI_NetworkBehaviour_Domestic_Resource>();
+        private float _lastAnimalScanTime = -30f;
+        private const float ANIMAL_SCAN_INTERVAL = 15f;
+
         #region [START] LIVESTOCK RESOURCE HARVEST COROUTINE
         private IEnumerator LivestockLoop()
         {
@@ -62,11 +66,25 @@ namespace FarmersCompanion.Features
                 Vector3 playerPos = player.transform.position;
                 float radiusSqr = LivestockRadius * LivestockRadius;
 
-                // Find all domestic resource animals within radius
-                var domesticResources = FindObjectsOfType<AI_NetworkBehaviour_Domestic_Resource>();
-                if (domesticResources == null || domesticResources.Length == 0) continue;
+                // Refresh cached animals periodically
+                if (Time.unscaledTime - _lastAnimalScanTime > ANIMAL_SCAN_INTERVAL || _cachedAnimals.Count == 0)
+                {
+                    _lastAnimalScanTime = Time.unscaledTime;
+                    _cachedAnimals.Clear();
+                    var found = FindObjectsOfType<AI_NetworkBehaviour_Domestic_Resource>();
+                    if (found != null && found.Length > 0)
+                    {
+                        _cachedAnimals.AddRange(found);
+                    }
+                }
+                else
+                {
+                    _cachedAnimals.RemoveAll(a => a == null);
+                }
 
-                foreach (var animal in domesticResources)
+                if (_cachedAnimals.Count == 0) continue;
+
+                foreach (var animal in _cachedAnimals)
                 {
                     if (animal == null) continue;
 

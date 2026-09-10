@@ -65,6 +65,10 @@ namespace FarmersCompanion.Features
         }
         #endregion [END] LOW-FREQUENCY HARVEST COROUTINE
 
+        private readonly List<Cropplot> _cachedPlots = new List<Cropplot>();
+        private float _lastPlotsScanTime = -30f;
+        private const float PLOTS_SCAN_INTERVAL = 12f;
+
         #region [START] FEATURE 27: MULTI HARVEST SWEEP
         /// <summary>
         /// Instantly harvests all ripe crops within radius in one action.
@@ -77,48 +81,66 @@ namespace FarmersCompanion.Features
             Vector3 playerPos = player.transform.position;
             float radiusSqr = radius * radius;
 
-            Plant[] plants = FindObjectsOfType<Plant>();
-            if (plants == null || plants.Length == 0) return 0;
+            // Refresh cached cropplots periodically
+            if (Time.unscaledTime - _lastPlotsScanTime > PLOTS_SCAN_INTERVAL || _cachedPlots.Count == 0)
+            {
+                _lastPlotsScanTime = Time.unscaledTime;
+                _cachedPlots.Clear();
+                var found = FindObjectsOfType<Cropplot>();
+                if (found != null && found.Length > 0)
+                {
+                    _cachedPlots.AddRange(found);
+                }
+            }
+            else
+            {
+                _cachedPlots.RemoveAll(p => p == null);
+            }
+
+            if (_cachedPlots.Count == 0) return 0;
 
             var plantManager = ComponentManager<PlantManager>.Value;
             int harvestedCount = 0;
 
-            foreach (var plant in plants)
+            foreach (var plot in _cachedPlots)
             {
-                if (plant == null || !plant.FullyGrown()) continue;
+                if (plot == null) continue;
+                if ((plot.transform.position - playerPos).sqrMagnitude > radiusSqr) continue;
 
-                if ((plant.transform.position - playerPos).sqrMagnitude > radiusSqr) continue;
+                var slots = plot.GetSlots();
+                if (slots == null) continue;
 
-                // Cache cropplot and seed prefab before harvesting
-                Cropplot plot = plant.GetComponentInParent<Cropplot>();
-                try
+                for (int s = 0; s < slots.Count; s++)
                 {
-                    // Harvest via PlantManager or YieldHandler
-                    if (plantManager != null)
-                    {
-                        plantManager.Harvest(plant, true);
-                    }
-                    else if (plant.pickupComponent != null && plant.pickupComponent.yieldHandler != null)
-                    {
-                        plant.pickupComponent.yieldHandler.CollectYield(player);
-                        plant.PullRoots();
-                    }
-                    else
-                    {
-                        plant.PullRoots();
-                    }
+                    var plant = slots[s]?.plant;
+                    if (plant == null || !plant.FullyGrown()) continue;
 
-                    harvestedCount++;
-
-                    // Feature 18: Auto Replant Seeds
-                    if (replantAfterHarvest && plot != null)
+                    try
                     {
-                        TryAutoReplant(plot, player);
+                        if (plantManager != null)
+                        {
+                            plantManager.Harvest(plant, true);
+                        }
+                        else if (plant.pickupComponent != null && plant.pickupComponent.yieldHandler != null)
+                        {
+                            plant.pickupComponent.yieldHandler.CollectYield(player);
+                            plant.PullRoots();
+                        }
+                        else
+                        {
+                            plant.PullRoots();
+                        }
+
+                        harvestedCount++;
+
+                        if (replantAfterHarvest)
+                        {
+                            TryAutoReplant(plot, player);
+                        }
                     }
-                }
-                catch
-                {
-                    // Safe error handling to prevent any cascade issues
+                    catch
+                    {
+                    }
                 }
             }
 
