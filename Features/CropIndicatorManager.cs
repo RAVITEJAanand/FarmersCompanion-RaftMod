@@ -19,11 +19,12 @@ namespace FarmersCompanion.Features
         #region [START] CONFIGURATION PROPERTIES
         public bool EnableHealthIndicators { get; set; } = true;
         public bool EnableNotifications { get; set; } = true;
-        public float IndicatorMaxDistance { get; set; } = 6.0f;
+        public float IndicatorMaxDistance { get; set; } = 12.0f;
         #endregion [END] CONFIGURATION PROPERTIES
 
         private GUIStyle _indicatorStyle;
         private GUIStyle _toastStyle;
+        private Texture2D _boxBgTex;
         private string _activeToast = null;
         private float _toastTimer = 0f;
 
@@ -31,7 +32,7 @@ namespace FarmersCompanion.Features
         private static Camera _cachedCamera = null;
         private readonly List<Cropplot> _cachedAllPlots = new List<Cropplot>();
         private float _lastAllPlotsScanTime = -30f;
-        private const float ALL_PLOTS_SCAN_INTERVAL = 12f;
+        private const float ALL_PLOTS_SCAN_INTERVAL = 3.0f;
 
         private struct NearbyPlotData
         {
@@ -75,12 +76,12 @@ namespace FarmersCompanion.Features
         }
         #endregion [END] UNITY LIFECYCLE
 
-        #region [START] LOW-FREQUENCY SPATIAL CACHE COROUTINE (1.5s INTERVAL)
+        #region [START] LOW-FREQUENCY SPATIAL CACHE COROUTINE (0.4s INTERVAL)
         private IEnumerator SpatialCacheLoop()
         {
             while (true)
             {
-                yield return new WaitForSeconds(1.5f);
+                yield return new WaitForSeconds(0.4f);
 
                 if (!EnableHealthIndicators)
                 {
@@ -95,7 +96,7 @@ namespace FarmersCompanion.Features
                     continue;
                 }
 
-                // 1. Refresh full plot list only once every 12 seconds
+                // 1. Refresh full plot list every 3.0 seconds
                 if (Time.unscaledTime - _lastAllPlotsScanTime > ALL_PLOTS_SCAN_INTERVAL || _cachedAllPlots.Count == 0)
                 {
                     _lastAllPlotsScanTime = Time.unscaledTime;
@@ -111,7 +112,7 @@ namespace FarmersCompanion.Features
                     _cachedAllPlots.RemoveAll(p => p == null);
                 }
 
-                // 2. Filter nearby plots within IndicatorMaxDistance (8m) using squared distance
+                // 2. Filter nearby plots within IndicatorMaxDistance (12m) using squared distance
                 Vector3 playerPos = player.transform.position;
                 float maxDistSqr = IndicatorMaxDistance * IndicatorMaxDistance;
                 _nearbyPlotsToDraw.Clear();
@@ -123,29 +124,47 @@ namespace FarmersCompanion.Features
                     Vector3 plotPos = plot.transform.position;
                     if ((plotPos - playerPos).sqrMagnitude > maxDistSqr) continue;
 
-                    bool needsWater = plot.SlotsNeedWater();
                     var slots = plot.GetSlots();
-                    bool hasPlant = slots != null && slots.Count > 0 && slots[0] != null && slots[0].plant != null;
-                    bool isGrassPlot = plot is Cropplot_Grass;
+                    bool hasPlant = false;
+                    Plant plant = null;
+                    bool anyWater = false;
 
-                    // If it's an empty crop plot that has water, don't clutter the screen unless it needs water or has crops/grass!
-                    if (!hasPlant && !isGrassPlot && !needsWater) continue;
-
-                    string waterText = needsWater ? "<color=#FF6666>Needs Water 💧</color>" : "<color=#66FF66>Hydrated 💧</color>";
-
-                    string cropText = "";
-                    if (hasPlant)
+                    if (slots != null)
                     {
-                        var p = slots[0].plant;
-                        float progress = p.growTime > 0 ? Mathf.Clamp01(p.GetGrowTimer() / p.growTime) * 100f : 100f;
-                        cropText = p.FullyGrown() ? "<color=#FFFF44>🌾 Ready to Harvest!</color>" : $"🌱 {progress:F0}%";
+                        foreach (var s in slots)
+                        {
+                            if (s == null) continue;
+                            if (s.hasWater) anyWater = true;
+                            if (s.plant != null)
+                            {
+                                hasPlant = true;
+                                plant = s.plant;
+                            }
+                        }
+                    }
+
+                    bool isGrassPlot = plot is Cropplot_Grass;
+                    bool needsWater = plot.SlotsNeedWater() || (!anyWater && isGrassPlot);
+
+                    string label;
+                    if (hasPlant && plant != null)
+                    {
+                        string waterText = (anyWater && !needsWater) ? "<color=#66FF66>💧 Hydrated</color>" : "<color=#FF6666>💧 Needs Water</color>";
+                        float progress = plant.growTime > 0 ? Mathf.Clamp01(plant.GetGrowTimer() / plant.growTime) * 100f : 100f;
+                        string cropText = plant.FullyGrown() ? "<color=#FFFF44>🌾 Ready to Harvest!</color>" : $"🌱 {progress:F0}%";
+                        label = $"{waterText}  {cropText}";
                     }
                     else if (isGrassPlot)
                     {
-                        cropText = "<color=#A0E0A0>🐑 Grass</color>";
+                        string waterText = anyWater ? "<color=#66FF66>💧 Hydrated</color>" : "<color=#FF6666>💧 Needs Water</color>";
+                        label = $"{waterText}  <color=#A0E0A0>🐑 Grass</color>";
                     }
-
-                    string label = string.IsNullOrEmpty(cropText) ? waterText : $"{waterText}  {cropText}";
+                    else
+                    {
+                        // Empty Crop Plot! Show clear prompt so the player knows the plot is detected and ready for planting!
+                        string waterText = anyWater ? "<color=#66FF66>💧 Hydrated</color>" : "<color=#FF6666>💧 Dry</color>";
+                        label = $"{waterText}  <color=#FFD700>🌱 Empty Plot</color> <size=10><color=#E0E0E0>(Plant Seed)</color></size>";
+                    }
 
                     _nearbyPlotsToDraw.Add(new NearbyPlotData
                     {
@@ -153,8 +172,8 @@ namespace FarmersCompanion.Features
                         Label = label
                     });
 
-                    // Cap to 8 closest plots to keep the screen clean and performant
-                    if (_nearbyPlotsToDraw.Count >= 8) break;
+                    // Cap to 12 closest plots to keep the screen clean and performant
+                    if (_nearbyPlotsToDraw.Count >= 12) break;
                 }
             }
         }
@@ -191,9 +210,9 @@ namespace FarmersCompanion.Features
             // 2. Draw Floating 3D Indicators above cached nearby plots
             if (!EnableHealthIndicators || _nearbyPlotsToDraw.Count == 0) return;
 
-            if (_cachedCamera == null)
+            if (_cachedCamera == null || !_cachedCamera.gameObject.activeInHierarchy)
             {
-                _cachedCamera = Camera.main;
+                _cachedCamera = Camera.main ?? FindObjectOfType<Camera>();
             }
             if (_cachedCamera == null) return;
 
@@ -203,17 +222,17 @@ namespace FarmersCompanion.Features
                 if (data.Plot == null) continue;
 
                 // Live dynamic position locked directly to the crop plot on the floating raft!
-                Vector3 currentPlotPos = data.Plot.transform.position + Vector3.up * 0.40f;
+                Vector3 currentPlotPos = data.Plot.transform.position + Vector3.up * 0.55f;
                 Vector3 screenPos = _cachedCamera.WorldToScreenPoint(currentPlotPos);
 
                 // Behind camera or too far away
-                if (screenPos.z <= 0.4f || screenPos.z > IndicatorMaxDistance + 1.5f) continue;
+                if (screenPos.z <= 0.3f || screenPos.z > IndicatorMaxDistance + 2.0f) continue;
 
                 // Must be within visible screen viewport
-                if (screenPos.x < 15f || screenPos.x > Screen.width - 15f || screenPos.y < 15f || screenPos.y > Screen.height - 15f) continue;
+                if (screenPos.x < 10f || screenPos.x > Screen.width - 10f || screenPos.y < 10f || screenPos.y > Screen.height - 10f) continue;
 
                 Vector2 size = _indicatorStyle.CalcSize(new GUIContent(data.Label));
-                Rect rect = new Rect(screenPos.x - size.x / 2f, Screen.height - screenPos.y - size.y, size.x + 14, size.y + 4);
+                Rect rect = new Rect(screenPos.x - size.x / 2f, Screen.height - screenPos.y - size.y, size.x + 18, size.y + 6);
 
                 GUI.Box(rect, data.Label, _indicatorStyle);
             }
@@ -223,15 +242,24 @@ namespace FarmersCompanion.Features
         #region [START] STYLES INITIALIZATION
         private void InitStyles()
         {
+            if (_boxBgTex == null)
+            {
+                _boxBgTex = new Texture2D(1, 1);
+                _boxBgTex.SetPixel(0, 0, new Color(0.12f, 0.08f, 0.04f, 0.90f));
+                _boxBgTex.Apply();
+            }
+
             if (_indicatorStyle == null)
             {
                 _indicatorStyle = new GUIStyle(GUI.skin.box)
                 {
-                    fontSize = 12,
+                    fontSize = 13,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter,
                     richText = true
                 };
+                _indicatorStyle.normal.background = _boxBgTex;
+                _indicatorStyle.normal.textColor = Color.white;
             }
 
             if (_toastStyle == null)
@@ -243,6 +271,8 @@ namespace FarmersCompanion.Features
                     alignment = TextAnchor.MiddleCenter,
                     richText = true
                 };
+                _toastStyle.normal.background = _boxBgTex;
+                _toastStyle.normal.textColor = Color.white;
             }
         }
         #endregion [END] STYLES INITIALIZATION
