@@ -364,9 +364,9 @@ namespace FarmersCompanion.UI
             var page = CreatePageContainer(parent, $"Page_{index}");
             _tabPages[index] = page;
 
-            CreateToggleTile(page, "Auto Water Crops (Feature 16)", "Automatically waters dry crop plots within farming radius.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.EnableAutoWater, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.EnableAutoWater = v; }, 0);
-            CreateToggleTile(page, "Animal Grass Plot Watering (Feature 21)", "Keeps grass plots watered continuously so livestock can feed.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.EnableGrassWatering, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.EnableGrassWatering = v; }, 1);
-            CreateToggleTile(page, "Smart Water Usage (Feature 26)", "Only uses water when plots genuinely require hydration.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.SmartWaterUsage, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.SmartWaterUsage = v; }, 2);
+            CreateToggleTile(page, "Auto Water Crops", "Automatically waters dry crop plots within farming radius.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.EnableAutoWater, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.EnableAutoWater = v; }, 0);
+            CreateToggleTile(page, "Animal Grass Plot Watering", "Keeps grass plots watered continuously so livestock can feed.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.EnableGrassWatering, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.EnableGrassWatering = v; }, 1);
+            CreateToggleTile(page, "Smart Water Usage", "Only uses water when plots genuinely require hydration.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.SmartWaterUsage, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.SmartWaterUsage = v; }, 2);
         }
 
         private void BuildTabPageHarvest(GameObject parent, int index)
@@ -374,9 +374,9 @@ namespace FarmersCompanion.UI
             var page = CreatePageContainer(parent, $"Page_{index}");
             _tabPages[index] = page;
 
-            CreateToggleTile(page, "Auto Harvest Ripe Crops (Feature 17)", "Harvests fully mature crops directly into your inventory.", () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableAutoHarvest, (v) => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableAutoHarvest = v; }, 0);
-            CreateToggleTile(page, "Auto Replant Seeds (Feature 18)", "Picks available matching seeds from inventory and replants empty plots.", () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableAutoReplant, (v) => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableAutoReplant = v; }, 1);
-            CreateToggleTile(page, "Seed Saver Mode (Feature 28)", "Grants a 25% chance to refund / preserve the seed upon planting.", () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableSeedSaver, (v) => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableSeedSaver = v; }, 2);
+            CreateToggleTile(page, "Auto Harvest Ripe Crops", "Harvests fully mature crops directly into your inventory.", () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableAutoHarvest, (v) => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableAutoHarvest = v; }, 0);
+            CreateToggleTile(page, "Auto Replant Seeds", "Picks available matching seeds from inventory and replants empty plots.", () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableAutoReplant, (v) => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableAutoReplant = v; }, 1);
+            CreateToggleTile(page, "Seed Saver Mode", "Grants a 25% chance to refund / preserve the seed upon planting.", () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableSeedSaver, (v) => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableSeedSaver = v; }, 2);
 
             // Sweep Button
             var btnGO = new GameObject("Btn_MultiHarvest");
@@ -404,7 +404,7 @@ namespace FarmersCompanion.UI
                     }
                 }
             });
-            var bTxt = CreateText(btnGO, "⚡ MULTI-HARVEST SWEEP: Harvest All Ripe Crops Now! (Feature 27)", 15, FontStyle.Bold, TextGoldHeading, TextAnchor.MiddleCenter);
+            var bTxt = CreateText(btnGO, "⚡ MULTI-HARVEST SWEEP: Harvest All Ripe Crops Now!", 15, FontStyle.Bold, TextGoldHeading, TextAnchor.MiddleCenter);
             FillParent(bTxt.gameObject);
         }
 
@@ -413,9 +413,9 @@ namespace FarmersCompanion.UI
             var page = CreatePageContainer(parent, $"Page_{index}");
             _tabPages[index] = page;
 
-            CreateToggleTile(page, "Accelerated Crop Growth (Feature 19)", "Increases crop growth speed by 1.3x for balanced pacing.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableGrowthBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableGrowthBoost = v; }, 0);
-            CreateToggleTile(page, "Palm & Fruit Tree Growth Boost (Feature 20)", "Increases palm tree and large fruit tree growth by 1.5x.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableTreeGrowthBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableTreeGrowthBoost = v; }, 1);
-            CreateToggleTile(page, "Fertilizer Surge Multiplier (Feature 25)", "Applies an additional 1.5x speed boost to all fertilized plots.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableFertilizerBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableFertilizerBoost = v; }, 2);
+            CreateToggleTile(page, "Accelerated Crop Growth", "Increases crop growth speed by 1.3x for balanced pacing.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableGrowthBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableGrowthBoost = v; }, 0);
+            CreateToggleTile(page, "Palm & Fruit Tree Growth Boost", "Increases palm tree and large fruit tree growth by 1.5x.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableTreeGrowthBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableTreeGrowthBoost = v; }, 1);
+            CreateToggleTile(page, "Fertilizer Surge Multiplier", "Applies an additional 1.5x speed boost to all fertilized plots.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableFertilizerBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableFertilizerBoost = v; }, 2);
         }
 
         private void BuildTabPageLivestock(GameObject parent, int index)
@@ -423,9 +423,9 @@ namespace FarmersCompanion.UI
             var page = CreatePageContainer(parent, $"Page_{index}");
             _tabPages[index] = page;
 
-            CreateToggleTile(page, "Auto-Collect Livestock Products (Feature 22)", "Automatically shears Llamas for wool and milks Goats when ready.", () => LivestockManager.Instance != null && LivestockManager.Instance.EnableAutoCollectLivestock, (v) => { if (LivestockManager.Instance != null) LivestockManager.Instance.EnableAutoCollectLivestock = v; }, 0);
-            CreateToggleTile(page, "3D Floating Crop Health HUD (Feature 23)", "Displays in-world indicators showing hydration and growth %.", () => CropIndicatorManager.Instance != null && CropIndicatorManager.Instance.EnableHealthIndicators, (v) => { if (CropIndicatorManager.Instance != null) CropIndicatorManager.Instance.EnableHealthIndicators = v; }, 1);
-            CreateToggleTile(page, "Toast Notifications on Ready Crops (Feature 29)", "Shows gentle on-screen alerts when crops or wool are ready.", () => CropIndicatorManager.Instance != null && CropIndicatorManager.Instance.EnableNotifications, (v) => { if (CropIndicatorManager.Instance != null) CropIndicatorManager.Instance.EnableNotifications = v; }, 2);
+            CreateToggleTile(page, "Auto-Collect Livestock Products", "Automatically shears Llamas for wool and milks Goats when ready.", () => LivestockManager.Instance != null && LivestockManager.Instance.EnableAutoCollectLivestock, (v) => { if (LivestockManager.Instance != null) LivestockManager.Instance.EnableAutoCollectLivestock = v; }, 0);
+            CreateToggleTile(page, "3D Floating Crop Health HUD", "Displays in-world indicators showing hydration and growth %.", () => CropIndicatorManager.Instance != null && CropIndicatorManager.Instance.EnableHealthIndicators, (v) => { if (CropIndicatorManager.Instance != null) CropIndicatorManager.Instance.EnableHealthIndicators = v; }, 1);
+            CreateToggleTile(page, "Toast Notifications on Ready Crops", "Shows gentle on-screen alerts when crops or wool are ready.", () => CropIndicatorManager.Instance != null && CropIndicatorManager.Instance.EnableNotifications, (v) => { if (CropIndicatorManager.Instance != null) CropIndicatorManager.Instance.EnableNotifications = v; }, 2);
         }
 
         private GameObject CreatePageContainer(GameObject parent, string name)
@@ -527,7 +527,7 @@ namespace FarmersCompanion.UI
             var trImg = trimGO.AddComponent<Image>();
             trImg.color = WoodTrimAccent;
 
-            var footTxt = CreateText(footGO, "💡 <b>Quick Tip:</b> Press <b>[F1]</b> anytime to toggle this menu. Multi-Harvest sweep harvests all nearby ripe crops.", 14, FontStyle.Normal, TextParchmentLight, TextAnchor.MiddleLeft);
+            var footTxt = CreateText(footGO, "💡 <b>Quick Tip:</b> Press <b>[F1]</b> to toggle this menu. Use the Multi-Harvest button in the Harvest tab for an instant farm sweep.", 14, FontStyle.Normal, TextParchmentLight, TextAnchor.MiddleLeft);
             var ftRt = footTxt.GetComponent<RectTransform>();
             ftRt.anchorMin = new Vector2(0, 0);
             ftRt.anchorMax = new Vector2(1, 1);

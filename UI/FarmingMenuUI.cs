@@ -88,9 +88,9 @@ namespace FarmersCompanion.UI
             GUILayout.Label("💧 WATERING & SMART USAGE", _headerStyle);
             if (CropWaterManager.Instance != null)
             {
-                CropWaterManager.Instance.EnableAutoWater = GUILayout.Toggle(CropWaterManager.Instance.EnableAutoWater, " Enable Auto Water Crops (Feature 16)", _toggleStyle);
-                CropWaterManager.Instance.EnableGrassWatering = GUILayout.Toggle(CropWaterManager.Instance.EnableGrassWatering, " Enable Grass Watering for Livestock (Feature 21)", _toggleStyle);
-                CropWaterManager.Instance.SmartWaterUsage = GUILayout.Toggle(CropWaterManager.Instance.SmartWaterUsage, " Smart Water: Only water genuinely dry plots (Feature 26)", _toggleStyle);
+                CropWaterManager.Instance.EnableAutoWater = GUILayout.Toggle(CropWaterManager.Instance.EnableAutoWater, " Enable Auto Water Crops", _toggleStyle);
+                CropWaterManager.Instance.EnableGrassWatering = GUILayout.Toggle(CropWaterManager.Instance.EnableGrassWatering, " Enable Grass Watering for Livestock", _toggleStyle);
+                CropWaterManager.Instance.SmartWaterUsage = GUILayout.Toggle(CropWaterManager.Instance.SmartWaterUsage, " Smart Water: Only water genuinely dry plots", _toggleStyle);
 
                 GUILayout.Space(6);
                 GUILayout.Label($"Watering Radius: {CropWaterManager.Instance.WaterRadius:F0}m");
@@ -103,9 +103,9 @@ namespace FarmersCompanion.UI
             GUILayout.Label("🌾 HARVESTING & SEED CONSERVATION", _headerStyle);
             if (CropHarvestManager.Instance != null)
             {
-                CropHarvestManager.Instance.EnableAutoHarvest = GUILayout.Toggle(CropHarvestManager.Instance.EnableAutoHarvest, " Enable Auto Harvest Ripe Crops (Feature 17)", _toggleStyle);
-                CropHarvestManager.Instance.EnableAutoReplant = GUILayout.Toggle(CropHarvestManager.Instance.EnableAutoReplant, " Enable Auto Replant Seeds from Inventory (Feature 18)", _toggleStyle);
-                CropHarvestManager.Instance.EnableSeedSaver = GUILayout.Toggle(CropHarvestManager.Instance.EnableSeedSaver, " Enable Seed Saver Mode (Feature 28)", _toggleStyle);
+                CropHarvestManager.Instance.EnableAutoHarvest = GUILayout.Toggle(CropHarvestManager.Instance.EnableAutoHarvest, " Enable Auto Harvest Ripe Crops", _toggleStyle);
+                CropHarvestManager.Instance.EnableAutoReplant = GUILayout.Toggle(CropHarvestManager.Instance.EnableAutoReplant, " Enable Auto Replant Seeds from Inventory", _toggleStyle);
+                CropHarvestManager.Instance.EnableSeedSaver = GUILayout.Toggle(CropHarvestManager.Instance.EnableSeedSaver, " Enable Seed Saver Mode", _toggleStyle);
 
                 if (CropHarvestManager.Instance.EnableSeedSaver)
                 {
@@ -114,7 +114,7 @@ namespace FarmersCompanion.UI
                 }
 
                 GUILayout.Space(6);
-                if (GUILayout.Button("⚡ Multi-Harvest Sweep: Harvest All Ripe Crops Now! (Feature 27)", _buttonStyle))
+                if (GUILayout.Button("⚡ Multi-Harvest Sweep: Harvest All Ripe Crops Now!", _buttonStyle))
                 {
                     int count = CropHarvestManager.Instance.HarvestNearbyCrops(CropHarvestManager.Instance.HarvestRadius, CropHarvestManager.Instance.EnableAutoReplant);
                     if (CropIndicatorManager.Instance != null)
@@ -130,21 +130,21 @@ namespace FarmersCompanion.UI
             GUILayout.Label("🌱 GROWTH RATE & FORESTRY ACCELERATION", _headerStyle);
             if (CropGrowthManager.Instance != null)
             {
-                CropGrowthManager.Instance.EnableGrowthBoost = GUILayout.Toggle(CropGrowthManager.Instance.EnableGrowthBoost, " Enable Accelerated Crop Growth (Feature 19)", _toggleStyle);
+                CropGrowthManager.Instance.EnableGrowthBoost = GUILayout.Toggle(CropGrowthManager.Instance.EnableGrowthBoost, " Enable Accelerated Crop Growth", _toggleStyle);
                 if (CropGrowthManager.Instance.EnableGrowthBoost)
                 {
                     GUILayout.Label($"Crop Growth Multiplier: {CropGrowthManager.Instance.CropGrowthMultiplier:F1}x");
                     CropGrowthManager.Instance.CropGrowthMultiplier = GUILayout.HorizontalSlider(CropGrowthManager.Instance.CropGrowthMultiplier, 1.0f, 3.0f);
                 }
 
-                CropGrowthManager.Instance.EnableTreeGrowthBoost = GUILayout.Toggle(CropGrowthManager.Instance.EnableTreeGrowthBoost, " Enable Palm & Fruit Tree Growth Boost (Feature 20)", _toggleStyle);
+                CropGrowthManager.Instance.EnableTreeGrowthBoost = GUILayout.Toggle(CropGrowthManager.Instance.EnableTreeGrowthBoost, " Enable Palm & Fruit Tree Growth Boost", _toggleStyle);
                 if (CropGrowthManager.Instance.EnableTreeGrowthBoost)
                 {
                     GUILayout.Label($"Tree Growth Multiplier: {CropGrowthManager.Instance.TreeGrowthMultiplier:F1}x");
                     CropGrowthManager.Instance.TreeGrowthMultiplier = GUILayout.HorizontalSlider(CropGrowthManager.Instance.TreeGrowthMultiplier, 1.0f, 3.0f);
                 }
 
-                CropGrowthManager.Instance.EnableFertilizerBoost = GUILayout.Toggle(CropGrowthManager.Instance.EnableFertilizerBoost, " Fertilizer Surge: Extra 1.5x Growth Multiplier (Feature 25)", _toggleStyle);
+                CropGrowthManager.Instance.EnableFertilizerBoost = GUILayout.Toggle(CropGrowthManager.Instance.EnableFertilizerBoost, " Fertilizer Surge: Extra 1.5x Growth Multiplier", _toggleStyle);
             }
 
             GUILayout.Space(12);
@@ -153,13 +153,13 @@ namespace FarmersCompanion.UI
             GUILayout.Label("🐑 LIVESTOCK & HEALTH VISIBILITY", _headerStyle);
             if (LivestockManager.Instance != null)
             {
-                LivestockManager.Instance.EnableAutoCollectLivestock = GUILayout.Toggle(LivestockManager.Instance.EnableAutoCollectLivestock, " Auto-Shear Llamas & Milk Goats when Ready (Feature 22)", _toggleStyle);
+                LivestockManager.Instance.EnableAutoCollectLivestock = GUILayout.Toggle(LivestockManager.Instance.EnableAutoCollectLivestock, " Auto-Shear Llamas & Milk Goats when Ready", _toggleStyle);
             }
 
             if (CropIndicatorManager.Instance != null)
             {
-                CropIndicatorManager.Instance.EnableHealthIndicators = GUILayout.Toggle(CropIndicatorManager.Instance.EnableHealthIndicators, " Show 3D Floating Crop Health/Water Indicators (Feature 23)", _toggleStyle);
-                CropIndicatorManager.Instance.EnableNotifications = GUILayout.Toggle(CropIndicatorManager.Instance.EnableNotifications, " Show Toast Notifications on Ready Harvest (Feature 29)", _toggleStyle);
+                CropIndicatorManager.Instance.EnableHealthIndicators = GUILayout.Toggle(CropIndicatorManager.Instance.EnableHealthIndicators, " Show 3D Floating Crop Health/Water Indicators", _toggleStyle);
+                CropIndicatorManager.Instance.EnableNotifications = GUILayout.Toggle(CropIndicatorManager.Instance.EnableNotifications, " Show Toast Notifications on Ready Harvest", _toggleStyle);
             }
 
             GUILayout.EndScrollView();
