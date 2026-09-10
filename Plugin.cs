@@ -133,7 +133,7 @@ namespace FarmersCompanion
                     indicatorMgr.EnableHealthIndicators = EnableHealthIndicators.Value;
                     indicatorMgr.EnableNotifications = EnableNotifications.Value;
 
-                    ManagerGO.AddComponent<FarmingMenuUI>();
+                    ManagerGO.AddComponent<CanvasFarmersCompanionUI>();
                 }
             }
             catch (Exception ex)

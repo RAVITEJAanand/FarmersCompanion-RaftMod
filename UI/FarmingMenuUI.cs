@@ -1,4 +1,5 @@
 using FarmersCompanion.Features;
+using FarmersCompanion.Helpers;
 using UnityEngine;
 
 namespace FarmersCompanion.UI
@@ -30,28 +31,40 @@ namespace FarmersCompanion.UI
             Instance = this;
         }
 
-        private void Update()
-        {
-            if (Input.GetKeyDown(Plugin.KeyMenu.Value))
-            {
-                ToggleMenu();
-            }
-        }
+        // Update() handled primarily by CanvasFarmersCompanionUI
         #endregion [END] UNITY LIFECYCLE
 
         #region [START] TOGGLE MENU
+        public static void ToggleWindow()
+        {
+            CanvasFarmersCompanionUI.ToggleWindow();
+        }
+
+
         public void ToggleMenu()
         {
             IsVisible = !IsVisible;
             if (IsVisible)
             {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                // Dynamic centering on screen
+                _windowRect.x = Mathf.Clamp((Screen.width - 520) / 2f, 20f, Screen.width - 540);
+                _windowRect.y = Mathf.Clamp((Screen.height - 620) / 2f, 20f, Screen.height - 640);
+
+                try { Helper.SetCursorVisibleAndLockState(true, CursorLockMode.None); }
+                catch
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                }
             }
             else
             {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
+                try { Helper.SetCursorVisibleAndLockState(false, CursorLockMode.Locked); }
+                catch
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
             }
         }
         #endregion [END] TOGGLE MENU
