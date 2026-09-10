@@ -19,11 +19,11 @@ namespace FarmersCompanion.UI
         private GameObject _canvasGO;
         private Canvas _canvas;
         private CanvasScaler _scaler;
-        private GraphicRaycaster _raycaster;
+        private GameObject _rootGO;
         private GameObject _modWindowGO;
         private Font _gameFont;
 
-        public static bool IsWindowOpen => Instance != null && Instance._modWindowGO != null && Instance._modWindowGO.activeSelf;
+        public static bool IsWindowOpen => Instance != null && Instance._rootGO != null && Instance._rootGO.activeSelf;
 
         #region [START] RAFT NATIVE HIGH-CONTRAST TIMBER PALETTE
         private static readonly Color WoodWindowBg      = new Color(0.18f, 0.13f, 0.08f, 0.99f); // Deep Forest Timber
@@ -102,10 +102,10 @@ namespace FarmersCompanion.UI
                 DontDestroyOnLoad(go);
                 Instance = go.AddComponent<CanvasFarmersCompanionUI>();
             }
-            if (Instance._modWindowGO == null) Instance.BuildCanvasUI();
+            if (Instance._rootGO == null) Instance.BuildCanvasUI();
 
-            bool newState = !Instance._modWindowGO.activeSelf;
-            Instance._modWindowGO.SetActive(newState);
+            bool newState = !Instance._rootGO.activeSelf;
+            Instance._rootGO.SetActive(newState);
 
             if (newState)
             {
@@ -160,17 +160,26 @@ namespace FarmersCompanion.UI
             _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             _scaler.matchWidthOrHeight = 0.5f;
 
-            _raycaster = _canvasGO.AddComponent<GraphicRaycaster>();
+            _canvasGO.AddComponent<GraphicRaycaster>();
 
             BuildWindow();
-            _modWindowGO.SetActive(false);
+            _rootGO.SetActive(false); // Cleanly hide entire popup (dimmer + window) by default!
         }
 
         private void BuildWindow()
         {
-            // Dimmer Background
+            // 1. Root Container for entire UI
+            _rootGO = new GameObject("Root_FarmersCompanion");
+            _rootGO.transform.SetParent(_canvasGO.transform, false);
+            var rootRt = _rootGO.AddComponent<RectTransform>();
+            rootRt.anchorMin = Vector2.zero;
+            rootRt.anchorMax = Vector2.one;
+            rootRt.offsetMin = Vector2.zero;
+            rootRt.offsetMax = Vector2.zero;
+
+            // 2. Dimmer Background
             var dimmerGO = new GameObject("Dimmer");
-            dimmerGO.transform.SetParent(_canvasGO.transform, false);
+            dimmerGO.transform.SetParent(_rootGO.transform, false);
             var dimmerRt = dimmerGO.AddComponent<RectTransform>();
             dimmerRt.anchorMin = Vector2.zero;
             dimmerRt.anchorMax = Vector2.one;
@@ -181,9 +190,9 @@ namespace FarmersCompanion.UI
             var dimmerBtn = dimmerGO.AddComponent<Button>();
             dimmerBtn.onClick.AddListener(ToggleWindow);
 
-            // Window Root
+            // 3. Window Root
             _modWindowGO = new GameObject("FarmersCompanion_Window");
-            _modWindowGO.transform.SetParent(_canvasGO.transform, false);
+            _modWindowGO.transform.SetParent(_rootGO.transform, false);
             var winRt = _modWindowGO.AddComponent<RectTransform>();
             winRt.anchorMin = new Vector2(0.5f, 0.5f);
             winRt.anchorMax = new Vector2(0.5f, 0.5f);
