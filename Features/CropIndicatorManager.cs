@@ -19,7 +19,7 @@ namespace FarmersCompanion.Features
         #region [START] CONFIGURATION PROPERTIES
         public bool EnableHealthIndicators { get; set; } = true;
         public bool EnableNotifications { get; set; } = true;
-        public float IndicatorMaxDistance { get; set; } = 8.0f;
+        public float IndicatorMaxDistance { get; set; } = 6.0f;
         #endregion [END] CONFIGURATION PROPERTIES
 
         private GUIStyle _indicatorStyle;
@@ -35,7 +35,7 @@ namespace FarmersCompanion.Features
 
         private struct NearbyPlotData
         {
-            public Vector3 WorldPos;
+            public Cropplot Plot;
             public string Label;
         }
         private readonly List<NearbyPlotData> _nearbyPlotsToDraw = new List<NearbyPlotData>();
@@ -124,25 +124,37 @@ namespace FarmersCompanion.Features
                     if ((plotPos - playerPos).sqrMagnitude > maxDistSqr) continue;
 
                     bool needsWater = plot.SlotsNeedWater();
+                    var slots = plot.GetSlots();
+                    bool hasPlant = slots != null && slots.Count > 0 && slots[0] != null && slots[0].plant != null;
+                    bool isGrassPlot = plot is Cropplot_Grass;
+
+                    // If it's an empty crop plot that has water, don't clutter the screen unless it needs water or has crops/grass!
+                    if (!hasPlant && !isGrassPlot && !needsWater) continue;
+
                     string waterText = needsWater ? "<color=#FF6666>Needs Water 💧</color>" : "<color=#66FF66>Hydrated 💧</color>";
 
                     string cropText = "";
-                    var slots = plot.GetSlots();
-                    if (slots != null && slots.Count > 0 && slots[0] != null && slots[0].plant != null)
+                    if (hasPlant)
                     {
                         var p = slots[0].plant;
                         float progress = p.growTime > 0 ? Mathf.Clamp01(p.GetGrowTimer() / p.growTime) * 100f : 100f;
                         cropText = p.FullyGrown() ? "<color=#FFFF44>🌾 Ready to Harvest!</color>" : $"🌱 {progress:F0}%";
                     }
+                    else if (isGrassPlot)
+                    {
+                        cropText = "<color=#A0E0A0>🐑 Grass</color>";
+                    }
+
+                    string label = string.IsNullOrEmpty(cropText) ? waterText : $"{waterText}  {cropText}";
 
                     _nearbyPlotsToDraw.Add(new NearbyPlotData
                     {
-                        WorldPos = plotPos + Vector3.up * 0.85f,
-                        Label = $"{waterText}  {cropText}"
+                        Plot = plot,
+                        Label = label
                     });
 
-                    // Cap to 12 closest plots to ensure buttery-smooth UI
-                    if (_nearbyPlotsToDraw.Count >= 12) break;
+                    // Cap to 8 closest plots to keep the screen clean and performant
+                    if (_nearbyPlotsToDraw.Count >= 8) break;
                 }
             }
         }
@@ -188,11 +200,20 @@ namespace FarmersCompanion.Features
             for (int i = 0; i < _nearbyPlotsToDraw.Count; i++)
             {
                 var data = _nearbyPlotsToDraw[i];
-                Vector3 screenPos = _cachedCamera.WorldToScreenPoint(data.WorldPos);
-                if (screenPos.z <= 0.1f) continue; // Behind camera
+                if (data.Plot == null) continue;
+
+                // Live dynamic position locked directly to the crop plot on the floating raft!
+                Vector3 currentPlotPos = data.Plot.transform.position + Vector3.up * 0.40f;
+                Vector3 screenPos = _cachedCamera.WorldToScreenPoint(currentPlotPos);
+
+                // Behind camera or too far away
+                if (screenPos.z <= 0.4f || screenPos.z > IndicatorMaxDistance + 1.5f) continue;
+
+                // Must be within visible screen viewport
+                if (screenPos.x < 15f || screenPos.x > Screen.width - 15f || screenPos.y < 15f || screenPos.y > Screen.height - 15f) continue;
 
                 Vector2 size = _indicatorStyle.CalcSize(new GUIContent(data.Label));
-                Rect rect = new Rect(screenPos.x - size.x / 2f, Screen.height - screenPos.y - size.y, size.x + 16, size.y + 6);
+                Rect rect = new Rect(screenPos.x - size.x / 2f, Screen.height - screenPos.y - size.y, size.x + 14, size.y + 4);
 
                 GUI.Box(rect, data.Label, _indicatorStyle);
             }
