@@ -158,6 +158,7 @@ namespace FarmersCompanion.Features
             foreach (var slot in allSlots)
             {
                 if (slot == null || slot.IsEmpty) continue;
+                if (slot.locked) continue; // Respect Inventory Master favorite item locks
 
                 Item_Base item = slot.GetItemBase();
                 if (item == null || !plot.AcceptsPlantType(item)) continue;
