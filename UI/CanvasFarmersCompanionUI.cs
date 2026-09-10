@@ -119,11 +119,24 @@ namespace FarmersCompanion.UI
             }
             else
             {
-                try { Helper.SetCursorVisibleAndLockState(false, CursorLockMode.Locked); }
-                catch
+                bool isInGame = ComponentManager<Raft>.Value != null || ComponentManager<Network_Player>.Value != null;
+                if (isInGame)
                 {
-                    Cursor.lockState = CursorLockMode.Locked;
-                    Cursor.visible = false;
+                    try { Helper.SetCursorVisibleAndLockState(false, CursorLockMode.Locked); }
+                    catch
+                    {
+                        Cursor.lockState = CursorLockMode.Locked;
+                        Cursor.visible = false;
+                    }
+                }
+                else
+                {
+                    try { Helper.SetCursorVisibleAndLockState(true, CursorLockMode.None); }
+                    catch
+                    {
+                        Cursor.lockState = CursorLockMode.None;
+                        Cursor.visible = true;
+                    }
                 }
             }
         }
@@ -145,25 +158,34 @@ namespace FarmersCompanion.UI
         #region [START] BUILD CANVAS UI
         private void BuildCanvasUI()
         {
-            if (_canvasGO != null) return;
+            if (_canvasGO != null && _rootGO != null) return;
 
-            _canvasGO = new GameObject("FarmersCompanion_Canvas");
-            _canvasGO.transform.SetParent(transform, false);
+            if (_canvasGO == null)
+            {
+                _canvasGO = new GameObject("FarmersCompanion_Canvas");
+                _canvasGO.hideFlags = HideFlags.HideAndDontSave;
+                _canvasGO.layer = LayerMask.NameToLayer("UI") >= 0 ? LayerMask.NameToLayer("UI") : 5;
+                DontDestroyOnLoad(_canvasGO);
 
-            _canvas = _canvasGO.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 9520;
+                _canvas = _canvasGO.AddComponent<Canvas>();
+                _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                _canvas.overrideSorting = true;
+                _canvas.sortingOrder = 32000;
 
-            _scaler = _canvasGO.AddComponent<CanvasScaler>();
-            _scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            _scaler.referenceResolution = new Vector2(1920, 1080);
-            _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            _scaler.matchWidthOrHeight = 0.5f;
+                _scaler = _canvasGO.AddComponent<CanvasScaler>();
+                _scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                _scaler.referenceResolution = new Vector2(1920, 1080);
+                _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                _scaler.matchWidthOrHeight = 0.5f;
 
-            _canvasGO.AddComponent<GraphicRaycaster>();
+                _canvasGO.AddComponent<GraphicRaycaster>();
+            }
 
-            BuildWindow();
-            _rootGO.SetActive(false); // Cleanly hide entire popup (dimmer + window) by default!
+            if (_rootGO == null)
+            {
+                BuildWindow();
+                _rootGO.SetActive(false); // Cleanly hide entire popup (dimmer + window) by default!
+            }
         }
 
         private void BuildWindow()
