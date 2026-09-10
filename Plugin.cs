@@ -1,6 +1,7 @@
 using System;
 using BepInEx;
 using BepInEx.Configuration;
+using HarmonyLib;
 using FarmersCompanion.Features;
 using FarmersCompanion.UI;
 using UnityEngine;
@@ -86,6 +87,16 @@ namespace FarmersCompanion
             // UI & Alerts
             EnableHealthIndicators = Config.Bind("Features.UI", "EnableHealthIndicators", true, "Show floating 3D indicators for water/growth.");
             EnableNotifications = Config.Bind("Features.UI", "EnableNotifications", true, "Show on-screen toast alerts when harvests are ready.");
+
+            // Apply Harmony Patches (Cursor Unlock & Camera Freeze)
+            try
+            {
+                new Harmony(PluginInfo.PLUGIN_GUID).PatchAll();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"[Farmer's Companion] Failed to apply Harmony patches: {ex.Message}");
+            }
 
             // Spawn persistent manager
             EnsureManagerGameObject();

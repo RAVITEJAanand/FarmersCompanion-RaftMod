@@ -115,10 +115,49 @@ namespace FarmersCompanion.UI
                     Cursor.lockState = CursorLockMode.None;
                     Cursor.visible = true;
                 }
+
+                try
+                {
+                    if (CanvasHelper.ActiveMenu == MenuType.None)
+                    {
+                        CanvasHelper.ActiveMenu = MenuType.Cheat;
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    var np = ComponentManager<Network_Player>.Value;
+                    if (np != null && np.PlayerScript != null)
+                    {
+                        np.PlayerScript.SetLockMouseLook(true);
+                    }
+                }
+                catch { }
+
                 Instance.SelectTab(Instance._activeTab);
             }
             else
             {
+                try
+                {
+                    if (CanvasHelper.ActiveMenu == MenuType.Cheat)
+                    {
+                        CanvasHelper.ActiveMenu = MenuType.None;
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    var np = ComponentManager<Network_Player>.Value;
+                    if (np != null && np.PlayerScript != null)
+                    {
+                        np.PlayerScript.SetLockMouseLook(false);
+                    }
+                }
+                catch { }
+
                 bool isInGame = ComponentManager<Raft>.Value != null || ComponentManager<Network_Player>.Value != null;
                 if (isInGame)
                 {
