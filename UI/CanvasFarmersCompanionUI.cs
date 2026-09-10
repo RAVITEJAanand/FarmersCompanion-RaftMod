@@ -119,12 +119,10 @@ namespace FarmersCompanion.UI
             Instance.EnsureEventSystem();
             Instance._rootGO.SetActive(true);
 
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             try { Helper.SetCursorVisibleAndLockState(true, CursorLockMode.None); }
-            catch
-            {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-            }
+            catch { }
 
             try
             {
@@ -271,7 +269,6 @@ namespace FarmersCompanion.UI
 
                 var gr = _canvasGO.AddComponent<GraphicRaycaster>();
                 gr.blockingObjects = GraphicRaycaster.BlockingObjects.None;
-                gr.ignoreReversedGraphics = true;
             }
 
             if (_rootGO == null)
@@ -380,24 +377,28 @@ namespace FarmersCompanion.UI
             FillParent(closeTxt.gameObject);
 
             // Tabs Bar
-            BuildTabsBar();
-
-            // Tab Pages Container
+            // Tab Pages Container (bounded below TabsBar)
             var pagesGO = new GameObject("TabPagesContainer");
             pagesGO.transform.SetParent(_modWindowGO.transform, false);
             var pagesRt = pagesGO.AddComponent<RectTransform>();
             pagesRt.anchorMin = new Vector2(0, 0);
             pagesRt.anchorMax = new Vector2(1, 1);
             pagesRt.offsetMin = new Vector2(24, 60);
-            pagesRt.offsetMax = new Vector2(-24, -114);
+            pagesRt.offsetMax = new Vector2(-24, -122);
 
             BuildTabPageWater(pagesGO, 0);
             BuildTabPageHarvest(pagesGO, 1);
             BuildTabPageGrowth(pagesGO, 2);
             BuildTabPageLivestock(pagesGO, 3);
 
+            // Tabs Bar (Placed after Pages in hierarchy to guarantee topmost raycast reception)
+            BuildTabsBar();
+
             // Footer Bar
             BuildFooterBar();
+
+            // Ensure Header is on the very top of raycasts
+            headGO.transform.SetAsLastSibling();
         }
 
         private void BuildTabsBar()
@@ -408,8 +409,15 @@ namespace FarmersCompanion.UI
             tRt.anchorMin = new Vector2(0, 1);
             tRt.anchorMax = new Vector2(1, 1);
             tRt.pivot = new Vector2(0.5f, 1);
-            tRt.sizeDelta = new Vector2(0, 48);
-            tRt.anchoredPosition = new Vector2(0, -60);
+            tRt.sizeDelta = new Vector2(-48, 46);
+            tRt.anchoredPosition = new Vector2(0, -66);
+
+            var tabLayout = tabsGO.AddComponent<HorizontalLayoutGroup>();
+            tabLayout.spacing = 8;
+            tabLayout.childForceExpandWidth = true;
+            tabLayout.childForceExpandHeight = true;
+            tabLayout.childControlWidth = true;
+            tabLayout.childControlHeight = true;
 
             string[] tabNames = new[]
             {
@@ -419,18 +427,11 @@ namespace FarmersCompanion.UI
                 "🐑 LIVESTOCK & 3D HUD"
             };
 
-            float tabWidth = 1140f / TAB_COUNT;
             for (int i = 0; i < TAB_COUNT; i++)
             {
                 int tabIndex = i;
                 var btnGO = new GameObject($"Tab_{i}");
                 btnGO.transform.SetParent(tabsGO.transform, false);
-                var bRt = btnGO.AddComponent<RectTransform>();
-                bRt.anchorMin = new Vector2(0, 0);
-                bRt.anchorMax = new Vector2(0, 1);
-                bRt.pivot = new Vector2(0, 0.5f);
-                bRt.sizeDelta = new Vector2(tabWidth - 4, 0);
-                bRt.anchoredPosition = new Vector2(i * tabWidth + 2, 0);
 
                 var img = btnGO.AddComponent<Image>();
                 img.color = TabInactiveBg;
@@ -442,14 +443,20 @@ namespace FarmersCompanion.UI
                 outline.effectDistance = new Vector2(2, -2);
                 _tabButtonOutlines[i] = outline;
 
+                var btn = btnGO.AddComponent<Button>();
+                btn.targetGraphic = img;
+                btn.transition = Selectable.Transition.None;
+                btn.onClick.AddListener(() =>
+                {
+                    SelectTab(tabIndex);
+                });
+
                 var txt = CreateText(btnGO, tabNames[i], 14, FontStyle.Bold, TabInactiveText, TextAnchor.MiddleCenter);
                 FillParent(txt.gameObject);
                 _tabButtonTexts[i] = txt;
-
-                var btn = btnGO.AddComponent<Button>();
-                btn.targetGraphic = img;
-                btn.onClick.AddListener(() => SelectTab(tabIndex));
             }
+
+            tabsGO.transform.SetAsLastSibling();
         }
 
         public void SelectTab(int index)
@@ -458,11 +465,35 @@ namespace FarmersCompanion.UI
             for (int i = 0; i < TAB_COUNT; i++)
             {
                 bool active = (i == index);
-                if (_tabPages[i] != null) _tabPages[i].SetActive(active);
-                if (_tabButtonImages[i] != null) _tabButtonImages[i].color = active ? TabActiveBg : TabInactiveBg;
-                if (_tabButtonOutlines[i] != null) _tabButtonOutlines[i].effectColor = active ? TabActiveBorder : TabInactiveBorder;
-                if (_tabButtonTexts[i] != null) _tabButtonTexts[i].color = active ? TabActiveText : TabInactiveText;
+                if (_tabPages[i] != null)
+                {
+                    _tabPages[i].SetActive(active);
+                }
+
+                Color targetBg = active ? TabActiveBg : TabInactiveBg;
+                Color targetBorder = active ? TabActiveBorder : TabInactiveBorder;
+                Color targetText = active ? TabActiveText : TabInactiveText;
+
+                if (_tabButtonImages[i] != null)
+                {
+                    _tabButtonImages[i].color = targetBg;
+                    var btn = _tabButtonImages[i].GetComponent<Button>();
+                    if (btn != null)
+                    {
+                        btn.transition = Selectable.Transition.None;
+                    }
+                }
+                if (_tabButtonOutlines[i] != null)
+                {
+                    _tabButtonOutlines[i].effectColor = targetBorder;
+                }
+                if (_tabButtonTexts[i] != null)
+                {
+                    _tabButtonTexts[i].color = targetText;
+                    _tabButtonTexts[i].fontStyle = active ? FontStyle.Bold : FontStyle.Normal;
+                }
             }
+            Debug.Log($"[Farmer's Companion] Switched to Tab {index}");
         }
 
         private void BuildTabPageWater(GameObject parent, int index)
