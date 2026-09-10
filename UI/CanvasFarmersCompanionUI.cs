@@ -96,6 +96,18 @@ namespace FarmersCompanion.UI
 
         public static void ToggleWindow()
         {
+            if (IsWindowOpen)
+            {
+                Close();
+            }
+            else
+            {
+                Open();
+            }
+        }
+
+        public static void Open()
+        {
             if (Instance == null)
             {
                 var go = new GameObject("FarmersCompanion_CanvasUI");
@@ -104,10 +116,76 @@ namespace FarmersCompanion.UI
             }
             if (Instance._rootGO == null) Instance.BuildCanvasUI();
 
-            bool newState = !Instance._rootGO.activeSelf;
-            Instance._rootGO.SetActive(newState);
+            Instance.EnsureEventSystem();
+            Instance._rootGO.SetActive(true);
 
-            if (newState)
+            try { Helper.SetCursorVisibleAndLockState(true, CursorLockMode.None); }
+            catch
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+
+            try
+            {
+                if (CanvasHelper.ActiveMenu == MenuType.None)
+                {
+                    CanvasHelper.ActiveMenu = MenuType.Cheat;
+                }
+            }
+            catch { }
+
+            try
+            {
+                var np = ComponentManager<Network_Player>.Value;
+                if (np != null && np.PlayerScript != null)
+                {
+                    np.PlayerScript.SetLockMouseLook(true);
+                }
+            }
+            catch { }
+
+            Instance.SelectTab(Instance._activeTab);
+            Debug.Log("[Farmer's Companion] Settings UI Opened.");
+        }
+
+        public static void Close()
+        {
+            if (Instance == null || Instance._rootGO == null) return;
+            if (!Instance._rootGO.activeSelf) return;
+
+            Instance._rootGO.SetActive(false);
+
+            try
+            {
+                if (CanvasHelper.ActiveMenu == MenuType.Cheat)
+                {
+                    CanvasHelper.ActiveMenu = MenuType.None;
+                }
+            }
+            catch { }
+
+            try
+            {
+                var np = ComponentManager<Network_Player>.Value;
+                if (np != null && np.PlayerScript != null)
+                {
+                    np.PlayerScript.SetLockMouseLook(false);
+                }
+            }
+            catch { }
+
+            bool isInGame = ComponentManager<Raft>.Value != null || ComponentManager<Network_Player>.Value != null;
+            if (isInGame)
+            {
+                try { Helper.SetCursorVisibleAndLockState(false, CursorLockMode.Locked); }
+                catch
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
+            }
+            else
             {
                 try { Helper.SetCursorVisibleAndLockState(true, CursorLockMode.None); }
                 catch
@@ -115,67 +193,41 @@ namespace FarmersCompanion.UI
                     Cursor.lockState = CursorLockMode.None;
                     Cursor.visible = true;
                 }
+            }
 
-                try
+            Debug.Log("[Farmer's Companion] Settings UI Closed.");
+        }
+
+        private void EnsureEventSystem()
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es == null)
+            {
+                es = FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
+                if (es != null)
                 {
-                    if (CanvasHelper.ActiveMenu == MenuType.None)
-                    {
-                        CanvasHelper.ActiveMenu = MenuType.Cheat;
-                    }
+                    UnityEngine.EventSystems.EventSystem.current = es;
                 }
-                catch { }
+            }
 
-                try
-                {
-                    var np = ComponentManager<Network_Player>.Value;
-                    if (np != null && np.PlayerScript != null)
-                    {
-                        np.PlayerScript.SetLockMouseLook(true);
-                    }
-                }
-                catch { }
-
-                Instance.SelectTab(Instance._activeTab);
+            if (es == null)
+            {
+                var esGO = new GameObject("FarmersCompanion_EventSystem");
+                esGO.hideFlags = HideFlags.HideAndDontSave;
+                es = esGO.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                esGO.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+                DontDestroyOnLoad(esGO);
+                UnityEngine.EventSystems.EventSystem.current = es;
             }
             else
             {
-                try
+                if (!es.gameObject.activeInHierarchy)
                 {
-                    if (CanvasHelper.ActiveMenu == MenuType.Cheat)
-                    {
-                        CanvasHelper.ActiveMenu = MenuType.None;
-                    }
+                    es.gameObject.SetActive(true);
                 }
-                catch { }
-
-                try
+                if (es.GetComponent<UnityEngine.EventSystems.BaseInputModule>() == null)
                 {
-                    var np = ComponentManager<Network_Player>.Value;
-                    if (np != null && np.PlayerScript != null)
-                    {
-                        np.PlayerScript.SetLockMouseLook(false);
-                    }
-                }
-                catch { }
-
-                bool isInGame = ComponentManager<Raft>.Value != null || ComponentManager<Network_Player>.Value != null;
-                if (isInGame)
-                {
-                    try { Helper.SetCursorVisibleAndLockState(false, CursorLockMode.Locked); }
-                    catch
-                    {
-                        Cursor.lockState = CursorLockMode.Locked;
-                        Cursor.visible = false;
-                    }
-                }
-                else
-                {
-                    try { Helper.SetCursorVisibleAndLockState(true, CursorLockMode.None); }
-                    catch
-                    {
-                        Cursor.lockState = CursorLockMode.None;
-                        Cursor.visible = true;
-                    }
+                    es.gameObject.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
                 }
             }
         }
@@ -187,9 +239,9 @@ namespace FarmersCompanion.UI
                 ToggleWindow();
             }
 
-            if (IsWindowOpen && InputHelper.WasKeyPressed(KeyCode.Escape))
+            if (IsWindowOpen && (InputHelper.WasKeyPressed(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Escape)))
             {
-                ToggleWindow();
+                Close();
             }
         }
         #endregion [END] UNITY LIFECYCLE
@@ -209,7 +261,7 @@ namespace FarmersCompanion.UI
                 _canvas = _canvasGO.AddComponent<Canvas>();
                 _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
                 _canvas.overrideSorting = true;
-                _canvas.sortingOrder = 32000;
+                _canvas.sortingOrder = 33000; // Top-most priority (above InstalledMods 32500 and native menus)
 
                 _scaler = _canvasGO.AddComponent<CanvasScaler>();
                 _scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -217,12 +269,15 @@ namespace FarmersCompanion.UI
                 _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
                 _scaler.matchWidthOrHeight = 0.5f;
 
-                _canvasGO.AddComponent<GraphicRaycaster>();
+                var gr = _canvasGO.AddComponent<GraphicRaycaster>();
+                gr.blockingObjects = GraphicRaycaster.BlockingObjects.None;
+                gr.ignoreReversedGraphics = true;
             }
 
             if (_rootGO == null)
             {
                 BuildWindow();
+                SetLayerRecursively(_canvasGO, LayerMask.NameToLayer("UI") >= 0 ? LayerMask.NameToLayer("UI") : 5);
                 _rootGO.SetActive(false); // Cleanly hide entire popup (dimmer + window) by default!
             }
         }
@@ -248,8 +303,10 @@ namespace FarmersCompanion.UI
             dimmerRt.offsetMax = Vector2.zero;
             var dimmerImg = dimmerGO.AddComponent<Image>();
             dimmerImg.color = new Color(0, 0, 0, 0.65f);
+            dimmerImg.raycastTarget = true;
             var dimmerBtn = dimmerGO.AddComponent<Button>();
-            dimmerBtn.onClick.AddListener(ToggleWindow);
+            dimmerBtn.targetGraphic = dimmerImg;
+            dimmerBtn.onClick.AddListener(Close);
 
             // 3. Window Root
             _modWindowGO = new GameObject("FarmersCompanion_Window");
@@ -301,6 +358,7 @@ namespace FarmersCompanion.UI
             // Close Button
             var closeGO = new GameObject("Btn_Close");
             closeGO.transform.SetParent(headGO.transform, false);
+            closeGO.transform.SetAsLastSibling();
             var closeRt = closeGO.AddComponent<RectTransform>();
             closeRt.anchorMin = new Vector2(1, 0.5f);
             closeRt.anchorMax = new Vector2(1, 0.5f);
@@ -309,8 +367,15 @@ namespace FarmersCompanion.UI
             closeRt.anchoredPosition = new Vector2(-12, 0);
             var closeImg = closeGO.AddComponent<Image>();
             closeImg.color = ButtonCloseRed;
+            closeImg.raycastTarget = true;
             var closeBtn = closeGO.AddComponent<Button>();
-            closeBtn.onClick.AddListener(ToggleWindow);
+            closeBtn.targetGraphic = closeImg;
+            var cb = closeBtn.colors;
+            cb.normalColor = ButtonCloseRed;
+            cb.highlightedColor = new Color(0.90f, 0.25f, 0.20f, 1f);
+            cb.pressedColor = new Color(0.50f, 0.10f, 0.08f, 1f);
+            closeBtn.colors = cb;
+            closeBtn.onClick.AddListener(Close);
             var closeTxt = CreateText(closeGO, "✕", 20, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter);
             FillParent(closeTxt.gameObject);
 
@@ -369,6 +434,7 @@ namespace FarmersCompanion.UI
 
                 var img = btnGO.AddComponent<Image>();
                 img.color = TabInactiveBg;
+                img.raycastTarget = true;
                 _tabButtonImages[i] = img;
 
                 var outline = btnGO.AddComponent<Outline>();
@@ -381,6 +447,7 @@ namespace FarmersCompanion.UI
                 _tabButtonTexts[i] = txt;
 
                 var btn = btnGO.AddComponent<Button>();
+                btn.targetGraphic = img;
                 btn.onClick.AddListener(() => SelectTab(tabIndex));
             }
         }
@@ -428,10 +495,12 @@ namespace FarmersCompanion.UI
             bRt.anchoredPosition = new Vector2(0, 10);
             var bImg = btnGO.AddComponent<Image>();
             bImg.color = ActionTileBg;
+            bImg.raycastTarget = true;
             var bOutline = btnGO.AddComponent<Outline>();
             bOutline.effectColor = ActionTileBorder;
             bOutline.effectDistance = new Vector2(2, -2);
             var btn = btnGO.AddComponent<Button>();
+            btn.targetGraphic = bImg;
             btn.onClick.AddListener(() =>
             {
                 if (CropHarvestManager.Instance != null)
@@ -525,6 +594,7 @@ namespace FarmersCompanion.UI
 
             var boxImg = boxGO.AddComponent<Image>();
             boxImg.color = CheckboxWoodBg;
+            boxImg.raycastTarget = true;
             var boxOutline = boxGO.AddComponent<Outline>();
             boxOutline.effectColor = ActionTileBorder;
             boxOutline.effectDistance = new Vector2(1.5f, -1.5f);
@@ -533,6 +603,7 @@ namespace FarmersCompanion.UI
             FillParent(checkTxt.gameObject);
 
             var btn = boxGO.AddComponent<Button>();
+            btn.targetGraphic = boxImg;
             btn.onClick.AddListener(() =>
             {
                 bool newState = !getter();
@@ -575,6 +646,7 @@ namespace FarmersCompanion.UI
 
             var closeBtnGO = new GameObject("Btn_FootClose");
             closeBtnGO.transform.SetParent(footGO.transform, false);
+            closeBtnGO.transform.SetAsLastSibling();
             var cRt = closeBtnGO.AddComponent<RectTransform>();
             cRt.anchorMin = new Vector2(1, 0.5f);
             cRt.anchorMax = new Vector2(1, 0.5f);
@@ -583,8 +655,15 @@ namespace FarmersCompanion.UI
             cRt.anchoredPosition = new Vector2(-18, 0);
             var cImg = closeBtnGO.AddComponent<Image>();
             cImg.color = ButtonCloseRed;
+            cImg.raycastTarget = true;
             var cBtn = closeBtnGO.AddComponent<Button>();
-            cBtn.onClick.AddListener(ToggleWindow);
+            cBtn.targetGraphic = cImg;
+            var fb = cBtn.colors;
+            fb.normalColor = ButtonCloseRed;
+            fb.highlightedColor = new Color(0.90f, 0.25f, 0.20f, 1f);
+            fb.pressedColor = new Color(0.50f, 0.10f, 0.08f, 1f);
+            cBtn.colors = fb;
+            cBtn.onClick.AddListener(Close);
             var cTxt = CreateText(closeBtnGO, "Close (ESC)", 13, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter);
             FillParent(cTxt.gameObject);
         }
@@ -612,6 +691,17 @@ namespace FarmersCompanion.UI
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
+        }
+
+        private static void SetLayerRecursively(GameObject obj, int newLayer)
+        {
+            if (obj == null) return;
+            obj.layer = newLayer;
+            for (int i = 0; i < obj.transform.childCount; i++)
+            {
+                var child = obj.transform.GetChild(i);
+                if (child != null) SetLayerRecursively(child.gameObject, newLayer);
+            }
         }
         #endregion [END] BUILD CANVAS UI
     }
