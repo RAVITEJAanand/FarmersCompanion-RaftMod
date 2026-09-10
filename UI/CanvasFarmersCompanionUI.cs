@@ -176,11 +176,24 @@ namespace FarmersCompanion.UI
             bool isInGame = ComponentManager<Raft>.Value != null || ComponentManager<Network_Player>.Value != null;
             if (isInGame)
             {
-                try { Helper.SetCursorVisibleAndLockState(false, CursorLockMode.Locked); }
-                catch
+                bool isOtherMenuOpen = false;
+                try
                 {
-                    Cursor.lockState = CursorLockMode.Locked;
-                    Cursor.visible = false;
+                    if (CanvasHelper.ActiveMenu != MenuType.None)
+                    {
+                        isOtherMenuOpen = true;
+                    }
+                }
+                catch { }
+
+                if (!isOtherMenuOpen)
+                {
+                    try { Helper.SetCursorVisibleAndLockState(false, CursorLockMode.Locked); }
+                    catch
+                    {
+                        Cursor.lockState = CursorLockMode.Locked;
+                        Cursor.visible = false;
+                    }
                 }
             }
             else
@@ -201,38 +214,27 @@ namespace FarmersCompanion.UI
             var es = UnityEngine.EventSystems.EventSystem.current;
             if (es == null)
             {
-                es = FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
-                if (es != null)
+                var existing = FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
+                if (existing != null)
                 {
+                    UnityEngine.EventSystems.EventSystem.current = existing;
+                }
+                else
+                {
+                    var esGO = new GameObject("FarmersCompanion_EventSystem");
+                    esGO.hideFlags = HideFlags.HideAndDontSave;
+                    es = esGO.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                    esGO.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+                    DontDestroyOnLoad(esGO);
                     UnityEngine.EventSystems.EventSystem.current = es;
-                }
-            }
-
-            if (es == null)
-            {
-                var esGO = new GameObject("FarmersCompanion_EventSystem");
-                esGO.hideFlags = HideFlags.HideAndDontSave;
-                es = esGO.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                esGO.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-                DontDestroyOnLoad(esGO);
-                UnityEngine.EventSystems.EventSystem.current = es;
-            }
-            else
-            {
-                if (!es.gameObject.activeInHierarchy)
-                {
-                    es.gameObject.SetActive(true);
-                }
-                if (es.GetComponent<UnityEngine.EventSystems.BaseInputModule>() == null)
-                {
-                    es.gameObject.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
                 }
             }
         }
 
         private void Update()
         {
-            if ((Plugin.KeyMenu != null && InputHelper.WasKeyPressed(Plugin.KeyMenu.Value)) || InputHelper.WasKeyPressed(KeyCode.F1))
+            KeyCode keyMenu = Plugin.KeyMenu != null ? Plugin.KeyMenu.Value : KeyCode.F1;
+            if (InputHelper.WasKeyPressed(keyMenu))
             {
                 ToggleWindow();
             }
@@ -268,7 +270,6 @@ namespace FarmersCompanion.UI
                 _scaler.matchWidthOrHeight = 0.5f;
 
                 var gr = _canvasGO.AddComponent<GraphicRaycaster>();
-                gr.blockingObjects = GraphicRaycaster.BlockingObjects.None;
             }
 
             if (_rootGO == null)
@@ -290,7 +291,7 @@ namespace FarmersCompanion.UI
             rootRt.offsetMin = Vector2.zero;
             rootRt.offsetMax = Vector2.zero;
 
-            // 2. Dimmer Background
+            // 2. Dimmer Background (Visual backdrop only - non-blocking so clicks never accidentally close the menu)
             var dimmerGO = new GameObject("Dimmer");
             dimmerGO.transform.SetParent(_rootGO.transform, false);
             var dimmerRt = dimmerGO.AddComponent<RectTransform>();
@@ -300,10 +301,7 @@ namespace FarmersCompanion.UI
             dimmerRt.offsetMax = Vector2.zero;
             var dimmerImg = dimmerGO.AddComponent<Image>();
             dimmerImg.color = new Color(0, 0, 0, 0.65f);
-            dimmerImg.raycastTarget = true;
-            var dimmerBtn = dimmerGO.AddComponent<Button>();
-            dimmerBtn.targetGraphic = dimmerImg;
-            dimmerBtn.onClick.AddListener(Close);
+            dimmerImg.raycastTarget = false;
 
             // 3. Window Root
             _modWindowGO = new GameObject("FarmersCompanion_Window");
@@ -416,8 +414,6 @@ namespace FarmersCompanion.UI
             tabLayout.spacing = 8;
             tabLayout.childForceExpandWidth = true;
             tabLayout.childForceExpandHeight = true;
-            tabLayout.childControlWidth = true;
-            tabLayout.childControlHeight = true;
 
             string[] tabNames = new[]
             {
@@ -433,6 +429,10 @@ namespace FarmersCompanion.UI
                 var btnGO = new GameObject($"Tab_{i}");
                 btnGO.transform.SetParent(tabsGO.transform, false);
 
+                var le = btnGO.AddComponent<LayoutElement>();
+                le.preferredHeight = 46;
+                le.flexibleWidth = 1f;
+
                 var img = btnGO.AddComponent<Image>();
                 img.color = TabInactiveBg;
                 img.raycastTarget = true;
@@ -445,7 +445,13 @@ namespace FarmersCompanion.UI
 
                 var btn = btnGO.AddComponent<Button>();
                 btn.targetGraphic = img;
-                btn.transition = Selectable.Transition.None;
+                var cb = btn.colors;
+                cb.normalColor = TabInactiveBg;
+                cb.highlightedColor = WoodTrimAccent;
+                cb.pressedColor = TabActiveBg;
+                cb.selectedColor = TabInactiveBg;
+                btn.colors = cb;
+                btn.transition = Selectable.Transition.ColorTint;
                 btn.onClick.AddListener(() =>
                 {
                     SelectTab(tabIndex);
@@ -480,7 +486,12 @@ namespace FarmersCompanion.UI
                     var btn = _tabButtonImages[i].GetComponent<Button>();
                     if (btn != null)
                     {
-                        btn.transition = Selectable.Transition.None;
+                        var cb = btn.colors;
+                        cb.normalColor = targetBg;
+                        cb.highlightedColor = active ? TabActiveBg : WoodTrimAccent;
+                        cb.pressedColor = TabActiveBg;
+                        cb.selectedColor = targetBg;
+                        btn.colors = cb;
                     }
                 }
                 if (_tabButtonOutlines[i] != null)
@@ -532,6 +543,11 @@ namespace FarmersCompanion.UI
             bOutline.effectDistance = new Vector2(2, -2);
             var btn = btnGO.AddComponent<Button>();
             btn.targetGraphic = bImg;
+            var bcb = btn.colors;
+            bcb.normalColor = ActionTileBg;
+            bcb.highlightedColor = new Color(0.35f, 0.25f, 0.12f, 1f);
+            bcb.pressedColor = new Color(0.18f, 0.12f, 0.05f, 1f);
+            btn.colors = bcb;
             btn.onClick.AddListener(() =>
             {
                 if (CropHarvestManager.Instance != null)
@@ -592,6 +608,7 @@ namespace FarmersCompanion.UI
 
             var img = tileGO.AddComponent<Image>();
             img.color = new Color(0.15f, 0.10f, 0.06f, 0.95f);
+            img.raycastTarget = true;
 
             var outline = tileGO.AddComponent<Outline>();
             outline.effectColor = new Color(0.30f, 0.22f, 0.12f, 0.90f);
@@ -633,15 +650,33 @@ namespace FarmersCompanion.UI
             var checkTxt = CreateText(boxGO, getter() ? "ON" : "OFF", 14, FontStyle.Bold, getter() ? CheckmarkGreen : Color.gray, TextAnchor.MiddleCenter);
             FillParent(checkTxt.gameObject);
 
-            var btn = boxGO.AddComponent<Button>();
-            btn.targetGraphic = boxImg;
-            btn.onClick.AddListener(() =>
+            void Toggle()
             {
                 bool newState = !getter();
                 setter(newState);
                 checkTxt.text = newState ? "ON" : "OFF";
                 checkTxt.color = newState ? CheckmarkGreen : Color.gray;
-            });
+            }
+
+            // Click checkbox
+            var btn = boxGO.AddComponent<Button>();
+            btn.targetGraphic = boxImg;
+            var bcb = btn.colors;
+            bcb.normalColor = CheckboxWoodBg;
+            bcb.highlightedColor = new Color(0.28f, 0.18f, 0.10f, 1f);
+            bcb.pressedColor = new Color(0.12f, 0.08f, 0.04f, 1f);
+            btn.colors = bcb;
+            btn.onClick.AddListener(Toggle);
+
+            // Entire tile row is also clickable with smooth hover effect!
+            var rowBtn = tileGO.AddComponent<Button>();
+            rowBtn.targetGraphic = img;
+            var rcb = rowBtn.colors;
+            rcb.normalColor = new Color(0.15f, 0.10f, 0.06f, 0.95f);
+            rcb.highlightedColor = new Color(0.22f, 0.15f, 0.09f, 0.98f);
+            rcb.pressedColor = new Color(0.10f, 0.06f, 0.03f, 1f);
+            rowBtn.colors = rcb;
+            rowBtn.onClick.AddListener(Toggle);
         }
 
         private void BuildFooterBar()
