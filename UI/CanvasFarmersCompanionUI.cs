@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using FarmersCompanion.Helpers;
 using FarmersCompanion.Features;
+using FarmersCompanion.Patches;
 
 namespace FarmersCompanion.UI
 {
@@ -19,6 +20,7 @@ namespace FarmersCompanion.UI
         private GameObject _canvasGO;
         private Canvas _canvas;
         private CanvasScaler _scaler;
+        private GraphicRaycaster _raycaster;
         private GameObject _rootGO;
         private GameObject _modWindowGO;
         private Font _gameFont;
@@ -123,13 +125,28 @@ namespace FarmersCompanion.UI
             if (Instance._rootGO == null) Instance.BuildCanvasUI();
 
             Instance.EnsureEventSystem();
+            if (Instance._raycaster != null && !Instance._raycaster.enabled) Instance._raycaster.enabled = true;
             Instance._rootGO.SetActive(true);
 
+            // 1. Crucial for Unity New Input System: Switch action map to "UI" so clicks register!
+            try
+            {
+                var cic = CustomInputConfig.Instance;
+                if (cic != null)
+                {
+                    cic.EnableInput();
+                    cic.SwitchCurrentActionMap("UI");
+                }
+            }
+            catch { }
+
+            // 2. Free cursor
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             try { Helper.SetCursorVisibleAndLockState(true, CursorLockMode.None); }
             catch { }
 
+            // 3. Mark ActiveMenu to freeze in-game raycasting/interactions
             try
             {
                 if (CanvasHelper.ActiveMenu == MenuType.None)
@@ -139,6 +156,7 @@ namespace FarmersCompanion.UI
             }
             catch { }
 
+            // 4. Freeze mouse look
             try
             {
                 var np = ComponentManager<Network_Player>.Value;
@@ -160,9 +178,20 @@ namespace FarmersCompanion.UI
 
             Instance._rootGO.SetActive(false);
 
+            bool peerModOpen = CursorPatchHelper.ShouldForceCursorFree();
+            bool nativeMenuOpen = false;
             try
             {
-                if (CanvasHelper.ActiveMenu == MenuType.Cheat)
+                if (CanvasHelper.ActiveMenu != MenuType.None && CanvasHelper.ActiveMenu != MenuType.Cheat)
+                {
+                    nativeMenuOpen = true;
+                }
+            }
+            catch { }
+
+            try
+            {
+                if (CanvasHelper.ActiveMenu == MenuType.Cheat && !peerModOpen)
                 {
                     CanvasHelper.ActiveMenu = MenuType.None;
                 }
@@ -172,9 +201,19 @@ namespace FarmersCompanion.UI
             try
             {
                 var np = ComponentManager<Network_Player>.Value;
-                if (np != null && np.PlayerScript != null)
+                if (np != null && np.PlayerScript != null && !peerModOpen && !nativeMenuOpen)
                 {
                     np.PlayerScript.SetLockMouseLook(false);
+                }
+            }
+            catch { }
+
+            try
+            {
+                var cic = CustomInputConfig.Instance;
+                if (cic != null && !peerModOpen && !nativeMenuOpen)
+                {
+                    cic.SwitchCurrentActionMap("Player");
                 }
             }
             catch { }
@@ -182,17 +221,7 @@ namespace FarmersCompanion.UI
             bool isInGame = ComponentManager<Raft>.Value != null || ComponentManager<Network_Player>.Value != null;
             if (isInGame)
             {
-                bool isOtherMenuOpen = false;
-                try
-                {
-                    if (CanvasHelper.ActiveMenu != MenuType.None)
-                    {
-                        isOtherMenuOpen = true;
-                    }
-                }
-                catch { }
-
-                if (!isOtherMenuOpen)
+                if (!peerModOpen && !nativeMenuOpen)
                 {
                     try { Helper.SetCursorVisibleAndLockState(false, CursorLockMode.Locked); }
                     catch
@@ -224,6 +253,7 @@ namespace FarmersCompanion.UI
                 if (existing != null)
                 {
                     UnityEngine.EventSystems.EventSystem.current = existing;
+                    es = existing;
                 }
                 else
                 {
@@ -234,6 +264,13 @@ namespace FarmersCompanion.UI
                     DontDestroyOnLoad(esGO);
                     UnityEngine.EventSystems.EventSystem.current = es;
                 }
+            }
+
+            if (es != null)
+            {
+                if (!es.enabled) es.enabled = true;
+                if (!es.gameObject.activeInHierarchy) es.gameObject.SetActive(true);
+                es.SetSelectedGameObject(null);
             }
         }
 
@@ -279,7 +316,7 @@ namespace FarmersCompanion.UI
                 _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
                 _scaler.matchWidthOrHeight = 0.5f;
 
-                var gr = _canvasGO.AddComponent<GraphicRaycaster>();
+                _raycaster = _canvasGO.AddComponent<GraphicRaycaster>();
             }
 
             if (_rootGO == null)
