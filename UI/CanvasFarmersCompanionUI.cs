@@ -94,8 +94,14 @@ namespace FarmersCompanion.UI
             return _gameFont;
         }
 
+        private static float _lastToggleTime = 0f;
+
         public static void ToggleWindow()
         {
+            if (Time.unscaledTime - _lastToggleTime < 0.25f) return;
+            _lastToggleTime = Time.unscaledTime;
+
+            Debug.Log($"[Farmer's Companion] ToggleWindow called! IsWindowOpen={IsWindowOpen} at Time={Time.unscaledTime:F2}");
             if (IsWindowOpen)
             {
                 Close();
@@ -144,7 +150,7 @@ namespace FarmersCompanion.UI
             catch { }
 
             Instance.SelectTab(Instance._activeTab);
-            Debug.Log("[Farmer's Companion] Settings UI Opened.");
+            Debug.Log($"[Farmer's Companion] Settings UI Opened at Time={Time.unscaledTime:F2}");
         }
 
         public static void Close()
@@ -206,7 +212,7 @@ namespace FarmersCompanion.UI
                 }
             }
 
-            Debug.Log("[Farmer's Companion] Settings UI Closed.");
+            Debug.Log($"[Farmer's Companion] Settings UI Closed at Time={Time.unscaledTime:F2}");
         }
 
         private void EnsureEventSystem()
@@ -241,7 +247,11 @@ namespace FarmersCompanion.UI
 
             if (IsWindowOpen && (InputHelper.WasKeyPressed(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Escape)))
             {
-                Close();
+                if (Time.unscaledTime - _lastToggleTime >= 0.25f)
+                {
+                    _lastToggleTime = Time.unscaledTime;
+                    Close();
+                }
             }
         }
         #endregion [END] UNITY LIFECYCLE
