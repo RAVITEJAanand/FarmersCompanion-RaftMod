@@ -390,7 +390,7 @@ namespace FarmersCompanion.UI
             trImg.color = WoodTrimAccent;
 
             // Title Text
-            var titleTxt = CreateText(headGO, "🌾 <color=#66FF66><b>FARMER'S COMPANION</b></color>  <size=15><color=#D0E5D0>— Agriculture & Livestock Suite v1.0.1</color></size>", 22, FontStyle.Bold, TextGreenHeading, TextAnchor.MiddleLeft);
+            var titleTxt = CreateText(headGO, $"🌾 <color=#66FF66><b>FARMER'S COMPANION</b></color> <size=15><color=#D0E5D0>v{PluginInfo.PLUGIN_VERSION}</color></size>  <size=15><color=#D0E5D0>— Agriculture & Livestock Suite</color></size>", 22, FontStyle.Bold, TextGreenHeading, TextAnchor.MiddleLeft);
             var titleRt = titleTxt.GetComponent<RectTransform>();
             titleRt.anchorMin = new Vector2(0, 0);
             titleRt.anchorMax = new Vector2(1, 1);
