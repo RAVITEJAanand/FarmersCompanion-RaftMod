@@ -1,7 +1,7 @@
 {
-  "version": "1.0.10",
+  "version": "1.0.11",
   "name": "Farmer's Companion",
   "downloadUrl": "https://github.com/RAVITEJAanand/FarmersCompanion-RaftMod/releases",
   "raftModdingUrl": "https://raftmodding.com/",
-  "notes": "v1.0.10: Removed Helpers/FarmingMath.cs, an unused helper with zero callers (all managers already inline their own squared-distance checks). No functional change."
+  "notes": "v1.0.11: Fixed Auto-Water, Auto-Harvest, and Auto-Replant never syncing to other players in multiplayer (host-only local state change with no network broadcast, so clients wouldn't see watered/harvested/replanted crops until an unrelated resync). Fixed the Farming Range Boost slider not actually updating Auto-Harvest's radius (only Auto-Water honored it). Fixed a raw legacy input call that could throw every frame the menu was open on certain input setups."
 }

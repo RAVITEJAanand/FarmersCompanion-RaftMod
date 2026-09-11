@@ -304,7 +304,11 @@ namespace FarmersCompanion.UI
                 ToggleWindow();
             }
 
-            if (IsWindowOpen && (InputHelper.WasKeyPressed(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Escape)))
+            // InputHelper.WasKeyPressed already handles Escape through its New Input System
+            // fallback; the raw Input.GetKeyDown call that used to sit here bypassed that
+            // fallback entirely and threw (and logged) on every single frame the window was
+            // open on the exact setups InputHelper exists to work around.
+            if (IsWindowOpen && InputHelper.WasKeyPressed(KeyCode.Escape))
             {
                 if (Time.unscaledTime - _lastToggleTime >= 0.25f)
                 {
@@ -584,7 +588,11 @@ namespace FarmersCompanion.UI
             CreateToggleTile(page, "Auto Water Crops", "Automatically waters dry crop plots within farming radius.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.EnableAutoWater, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.EnableAutoWater = v; Plugin.EnableAutoWater.Value = v; }, 0);
             CreateToggleTile(page, "Animal Grass Plot Watering", "Keeps grass plots watered continuously so livestock can feed.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.EnableGrassWatering, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.EnableGrassWatering = v; Plugin.EnableGrassWatering.Value = v; }, 1);
             CreateToggleTile(page, "Smart Water Usage", "Only uses water when plots genuinely require hydration.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.SmartWaterUsage, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.SmartWaterUsage = v; Plugin.SmartWaterUsage.Value = v; }, 2);
-            CreateSliderTile(page, "Farming Range Boost", 10f, 60f, "F0", "m", () => CropWaterManager.Instance != null ? CropWaterManager.Instance.WaterRadius : 30f, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.WaterRadius = v; Plugin.WaterRadius.Value = v; }, 3);
+            // This is the only range slider the UI exposes, but CropHarvestManager.HarvestRadius
+            // is a separate field that only ever gets its startup value from Plugin.cs - without
+            // also writing it here, Auto-Harvest/Multi-Harvest silently keep using the old radius
+            // forever after the player moves this slider, even though Auto-Water honors it live.
+            CreateSliderTile(page, "Farming Range Boost", 10f, 60f, "F0", "m", () => CropWaterManager.Instance != null ? CropWaterManager.Instance.WaterRadius : 30f, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.WaterRadius = v; if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.HarvestRadius = v; Plugin.WaterRadius.Value = v; }, 3);
         }
 
         private void BuildTabPageHarvest(GameObject parent, int index)

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using FarmersCompanion.Helpers;
+using Steamworks;
 using UnityEngine;
 
 namespace FarmersCompanion.Features
@@ -131,6 +132,20 @@ namespace FarmersCompanion.Features
                     {
                         // Safe fallback to direct method
                         plot.AddWater(false);
+                    }
+
+                    // WaterCropplot/AddWater only mutate local state - vanilla's own callers
+                    // (Cropplot's interact handler, PlantManager.WaterAllPlantsWithRain) always
+                    // pair this with a Message_WaterCrop RPC broadcast, otherwise clients never
+                    // see the plot become watered until an unrelated resync happens.
+                    if (plantManager != null)
+                    {
+                        try
+                        {
+                            var msg = new Message_WaterCrop(Messages.PlantManager_WaterPlant, plantManager, plot, false);
+                            player.Network.RPC(msg, Target.Other, EP2PSend.k_EP2PSendReliable, NetworkChannel.Channel_Game);
+                        }
+                        catch { }
                     }
                 }
             }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using FarmersCompanion.Helpers;
+using Steamworks;
 using UnityEngine;
 
 namespace FarmersCompanion.Features
@@ -131,6 +132,21 @@ namespace FarmersCompanion.Features
                     {
                         if (plantManager != null)
                         {
+                            // PlantManager.Harvest() only mutates local state - vanilla's own
+                            // caller (PlantManager.HarvestPlants) always broadcasts a
+                            // Message_HarvestPlant RPC first (built from the plant's still-intact
+                            // pickupComponent, before Harvest() clears/destroys it), otherwise the
+                            // harvested plant stays visibly present and interactable for clients.
+                            try
+                            {
+                                if (plant.pickupComponent != null && plant.pickupComponent.networkID != null)
+                                {
+                                    var harvestMsg = new Message_HarvestPlant(Messages.PlantManager_HarvestPlant, plantManager, plant, true);
+                                    player.Network.RPC(harvestMsg, Target.Other, EP2PSend.k_EP2PSendReliable, NetworkChannel.Channel_Game);
+                                }
+                            }
+                            catch { }
+
                             plantManager.Harvest(plant, true);
                         }
                         else if (plant.pickupComponent != null && plant.pickupComponent.yieldHandler != null)
@@ -221,7 +237,23 @@ namespace FarmersCompanion.Features
                         // Every planted object needs a unique network object index (matches the game's own
                         // Cropplot.RefillSlot pattern); a hardcoded 0 would collide with every other
                         // auto-replanted plant's ID and break host/client plant lookups in multiplayer.
-                        plot.PlantSeed(plantPrefab, SaveAndLoad.GetUniqueObjectIndex(), true, emptySlotIndex >= 0 ? emptySlotIndex : 0);
+                        uint newPlantObjectIndex = SaveAndLoad.GetUniqueObjectIndex();
+                        plot.PlantSeed(plantPrefab, newPlantObjectIndex, true, emptySlotIndex >= 0 ? emptySlotIndex : 0);
+
+                        // Cropplot.PlantSeed() only mutates local state - vanilla's own caller
+                        // (Cropplot.RefillSlot) always pairs it with a Message_PlantSeed RPC using
+                        // this exact same object index, otherwise clients never see the replanted
+                        // seedling appear.
+                        if (pm != null)
+                        {
+                            try
+                            {
+                                var plantMsg = new Message_PlantSeed(Messages.PlantManager_PlantSeed, pm, plot, plantPrefab, true);
+                                plantMsg.plantObjectIndex = newPlantObjectIndex;
+                                player.Network.RPC(plantMsg, Target.Other, EP2PSend.k_EP2PSendReliable, NetworkChannel.Channel_Game);
+                            }
+                            catch { }
+                        }
                     }
                 }
                 catch
