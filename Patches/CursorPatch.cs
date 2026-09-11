@@ -56,9 +56,15 @@ namespace FarmersCompanion.Patches
                             _imWindowProp = imType.GetProperty("IsWindowOpen", BindingFlags.Public | BindingFlags.Static);
                     }
                 }
-                if (_scWindowProp != null && _imWindowProp != null) _typesResolved = true;
             }
             catch { }
+            finally
+            {
+                // Resolve only once: this runs on every MouseLook.Update() frame, so retrying the
+                // AppDomain assembly scan forever (e.g. when a peer mod is simply not installed) would
+                // be a persistent per-frame reflection cost.
+                _typesResolved = true;
+            }
         }
     }
 

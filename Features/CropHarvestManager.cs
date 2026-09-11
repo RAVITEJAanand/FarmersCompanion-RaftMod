@@ -78,6 +78,8 @@ namespace FarmersCompanion.Features
             var player = PlayerHelper.GetLocalPlayer();
             if (player == null) return 0;
 
+            if (!PlayerHelper.IsHost()) return 0;
+
             Vector3 playerPos = player.transform.position;
             float radiusSqr = radius * radius;
 

@@ -13,13 +13,23 @@ namespace FarmersCompanion.Helpers
     public static class InputHelper
     {
         #region [START] WAS KEY PRESSED
+        // Once Legacy Input proves unavailable (project set to "Input System Package (New)" only),
+        // avoid re-throwing every frame for every key check — that's an expensive Update()-loop cost.
+        private static bool _legacyInputAvailable = true;
+
         public static bool WasKeyPressed(KeyCode legacyKey)
         {
-            try
+            if (_legacyInputAvailable)
             {
-                return Input.GetKeyDown(legacyKey);
+                try
+                {
+                    return Input.GetKeyDown(legacyKey);
+                }
+                catch
+                {
+                    _legacyInputAvailable = false;
+                }
             }
-            catch
             {
                 // Fallback to New Input System only if Legacy Input is disabled/throws
                 try

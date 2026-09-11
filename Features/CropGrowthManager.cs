@@ -63,10 +63,12 @@ namespace FarmersCompanion.Features
             {
                 yield return new WaitForSeconds(GrowthCheckIntervalSeconds);
 
-                if (!EnableGrowthBoost) continue;
+                if (!EnableGrowthBoost && !EnableTreeGrowthBoost) continue;
 
                 var player = PlayerHelper.GetLocalPlayer();
                 if (player == null) continue;
+
+                if (!PlayerHelper.IsHost()) continue;
 
                 Vector3 playerPos = player.transform.position;
                 float radiusSqr = GrowthRadius * GrowthRadius;
@@ -102,9 +104,11 @@ namespace FarmersCompanion.Features
                         var plant = slots[s]?.plant;
                         if (plant == null || plant.FullyGrown()) continue;
 
-                        // Calculate multiplier
+                        // Calculate multiplier (tree boost and crop boost are independent toggles)
                         bool isTree = plant is Plant_Palm || (plant.growTime > 180f);
-                        float mult = isTree ? (EnableTreeGrowthBoost ? TreeGrowthMultiplier : 1.0f) : CropGrowthMultiplier;
+                        if (isTree && !EnableTreeGrowthBoost) continue;
+                        if (!isTree && !EnableGrowthBoost) continue;
+                        float mult = isTree ? TreeGrowthMultiplier : CropGrowthMultiplier;
 
                         if (EnableFertilizerBoost)
                         {

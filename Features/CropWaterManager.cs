@@ -64,10 +64,12 @@ namespace FarmersCompanion.Features
             {
                 yield return new WaitForSeconds(WaterIntervalSeconds);
 
-                if (!EnableAutoWater) continue;
+                if (!EnableAutoWater && !EnableGrassWatering) continue;
 
                 var player = PlayerHelper.GetLocalPlayer();
                 if (player == null) continue;
+
+                if (!PlayerHelper.IsHost()) continue;
 
                 Vector3 playerPos = player.transform.position;
                 float radiusSqr = WaterRadius * WaterRadius;
@@ -102,9 +104,10 @@ namespace FarmersCompanion.Features
                         continue;
                     }
 
-                    // Feature 21: Check grass plot watering for livestock
+                    // Feature 21: Check grass plot watering for livestock (independent of EnableAutoWater)
                     bool isGrass = plot is Cropplot_Grass;
-                    if (isGrass && !EnableGrassWatering) continue;
+                    if (isGrass) { if (!EnableGrassWatering) continue; }
+                    else if (!EnableAutoWater) continue;
 
                     // Feature 26: Smart Water Usage — only water when slots genuinely need water
                     if (SmartWaterUsage && !plot.SlotsNeedWater())

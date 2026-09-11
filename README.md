@@ -1,12 +1,12 @@
 # 🌾 Farmer's Companion — Agriculture & Livestock Suite for Raft
 
-[![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg?style=for-the-badge&logo=github)](https://github.com/RAVITEJAanand/FarmersCompanion-RaftMod/releases)
+[![Version](https://img.shields.io/badge/Version-1.0.1-blue.svg?style=for-the-badge&logo=github)](https://github.com/RAVITEJAanand/FarmersCompanion-RaftMod/releases)
 [![Raft Version](https://img.shields.io/badge/Raft-The%20Final%20Chapter%20(v1.0+)-brightgreen.svg?style=for-the-badge&logo=steam)](https://store.steampowered.com/app/648800/Raft/)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/B4EMrR5Vrf)
 
 **Author**: KONDURI (RAVITEJAanand)  
 **Game**: Raft (The Final Chapter Update 1.09 / v13.01)  
-**Version**: 1.0.0  
+**Version**: 1.0.1  
 **Framework**: BepInEx 5.4.21+, Unity 2020.3  
 **Discord**: [Join our Modding Community](https://discord.gg/B4EMrR5Vrf)  
 **Compatibility**: 100% compatible with **Sailor's Companion** and **Inventory Master** (Zero hotkey conflicts, zero performance degradation)

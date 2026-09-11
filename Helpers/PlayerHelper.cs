@@ -55,6 +55,25 @@ namespace FarmersCompanion.Helpers
             }
         }
         #endregion [END] GET LOCAL RAFT
+
+        #region [START] IS HOST
+        /// <summary>
+        /// World state (crop growth, watering, harvesting, livestock resources) is authoritative on the host.
+        /// A remote client mutating it directly would only touch its own local copy, causing desync/flicker
+        /// with the host's replicated state (and, for inventory changes, potential item duplication/loss).
+        /// </summary>
+        public static bool IsHost()
+        {
+            try
+            {
+                return ComponentManager<Raft_Network>.Value == null || Raft_Network.IsHost;
+            }
+            catch
+            {
+                return true;
+            }
+        }
+        #endregion [END] IS HOST
     }
     // ============================================================================
     // [END] PLAYER & WORLD HELPER
