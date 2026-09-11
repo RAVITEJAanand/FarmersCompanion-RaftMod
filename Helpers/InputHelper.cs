@@ -16,6 +16,8 @@ namespace FarmersCompanion.Helpers
         // Once Legacy Input proves unavailable (project set to "Input System Package (New)" only),
         // avoid re-throwing every frame for every key check — that's an expensive Update()-loop cost.
         private static bool _legacyInputAvailable = true;
+        private static bool _loggedFallbackSwitch = false;
+        private static bool _loggedNullKeyboard = false;
 
         public static bool WasKeyPressed(KeyCode legacyKey)
         {
@@ -25,16 +27,27 @@ namespace FarmersCompanion.Helpers
                 {
                     return Input.GetKeyDown(legacyKey);
                 }
-                catch
+                catch (System.Exception ex)
                 {
                     _legacyInputAvailable = false;
+                    Debug.LogWarning($"[Farmer's Companion] DIAGNOSTIC: Legacy Input.GetKeyDown threw, switching to New Input System fallback permanently. Exception: {ex.Message}");
                 }
             }
             {
+                if (!_loggedFallbackSwitch)
+                {
+                    _loggedFallbackSwitch = true;
+                    Debug.Log("[Farmer's Companion] DIAGNOSTIC: Now using New Input System fallback path for key checks.");
+                }
                 // Fallback to New Input System only if Legacy Input is disabled/throws
                 try
                 {
                     var kb = Keyboard.current;
+                    if (kb == null && !_loggedNullKeyboard)
+                    {
+                        _loggedNullKeyboard = true;
+                        Debug.LogWarning("[Farmer's Companion] DIAGNOSTIC: Keyboard.current is NULL - New Input System fallback cannot detect any key presses!");
+                    }
                     if (kb != null)
                     {
                         switch (legacyKey)

@@ -67,8 +67,17 @@ namespace FarmersCompanion.UI
             Instance = this;
             gameObject.hideFlags = HideFlags.HideAndDontSave;
             DontDestroyOnLoad(gameObject);
-            GetGameFont();
-            BuildCanvasUI();
+            Debug.Log("[Farmer's Companion] CanvasFarmersCompanionUI.Awake() starting...");
+            try
+            {
+                GetGameFont();
+                BuildCanvasUI();
+                Debug.Log("[Farmer's Companion] CanvasFarmersCompanionUI.Awake() completed successfully.");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[Farmer's Companion] CanvasFarmersCompanionUI.Awake() FAILED: {ex}");
+            }
         }
 
         public Font GetGameFont()
@@ -275,8 +284,16 @@ namespace FarmersCompanion.UI
             }
         }
 
+        private static bool _loggedFirstUpdate = false;
+
         private void Update()
         {
+            if (!_loggedFirstUpdate)
+            {
+                _loggedFirstUpdate = true;
+                Debug.Log($"[Farmer's Companion] DIAGNOSTIC: Update() loop is running (first frame at Time={Time.unscaledTime:F2}).");
+            }
+
             KeyCode keyMenu = Plugin.KeyMenu != null ? Plugin.KeyMenu.Value : KeyCode.F1;
             if (InputHelper.WasKeyPressed(keyMenu))
             {
