@@ -1,6 +1,6 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "name": "Farmer's Companion",
   "downloadUrl": "https://github.com/RAVITEJAanand/FarmersCompanion-RaftMod/releases",
   "raftModdingUrl": "https://raftmodding.com/",
-  "notes": "v1.0.3: Added missing sliders to the live F1 menu (Seed Saver Chance, Crop Growth Multiplier, Tree Growth Multiplier, Farming Range Boost) that previously only existed in an unused, never-opened legacy menu. Removed that dead legacy menu file."
+  "notes": "v1.0.4: Fixed every toggle/slider in the F1 menu not saving to disk, so all settings silently reset back to defaults on every game restart. They now write through to the persistent BepInEx config."
