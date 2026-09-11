@@ -51,6 +51,9 @@ namespace FarmersCompanion
         // Features 23, 29: Visibility & Alerts
         public static ConfigEntry<bool> EnableHealthIndicators;
         public static ConfigEntry<bool> EnableNotifications;
+
+        // General
+        public static ConfigEntry<bool> CheckForUpdates;
         #endregion [END] CONFIGURATION DEFINITIONS
 
         #region [START] AWAKE
@@ -87,6 +90,9 @@ namespace FarmersCompanion
             // UI & Alerts
             EnableHealthIndicators = Config.Bind("Features.UI", "EnableHealthIndicators", true, "Show floating 3D indicators for water/growth.");
             EnableNotifications = Config.Bind("Features.UI", "EnableNotifications", true, "Show on-screen toast alerts when harvests are ready.");
+
+            // General
+            CheckForUpdates = Config.Bind("General", "CheckForUpdates", true, "Check GitHub for new updates on startup.");
 
             // Apply Harmony Patches (Cursor Unlock & Camera Freeze)
             try
@@ -145,6 +151,7 @@ namespace FarmersCompanion
                     indicatorMgr.EnableNotifications = EnableNotifications.Value;
 
                     ManagerGO.AddComponent<CanvasFarmersCompanionUI>();
+                    ManagerGO.AddComponent<UpdateChecker>();
                 }
             }
             catch (Exception ex)

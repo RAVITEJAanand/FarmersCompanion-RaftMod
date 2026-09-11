@@ -634,6 +634,65 @@ namespace FarmersCompanion.UI
             CreateToggleTile(page, "Auto-Collect Livestock Products", "Automatically shears Llamas for wool and milks Goats when ready.", () => LivestockManager.Instance != null && LivestockManager.Instance.EnableAutoCollectLivestock, (v) => { if (LivestockManager.Instance != null) LivestockManager.Instance.EnableAutoCollectLivestock = v; Plugin.EnableAutoCollectLivestock.Value = v; }, 0);
             CreateToggleTile(page, "3D Floating Crop Health HUD", "Displays in-world indicators showing hydration and growth %.", () => CropIndicatorManager.Instance != null && CropIndicatorManager.Instance.EnableHealthIndicators, (v) => { if (CropIndicatorManager.Instance != null) CropIndicatorManager.Instance.EnableHealthIndicators = v; Plugin.EnableHealthIndicators.Value = v; }, 1);
             CreateToggleTile(page, "Toast Notifications on Ready Crops", "Shows gentle on-screen alerts when crops or wool are ready.", () => CropIndicatorManager.Instance != null && CropIndicatorManager.Instance.EnableNotifications, (v) => { if (CropIndicatorManager.Instance != null) CropIndicatorManager.Instance.EnableNotifications = v; Plugin.EnableNotifications.Value = v; }, 2);
+
+            BuildVersionUpdateRow(page, 3);
+        }
+
+        private void BuildVersionUpdateRow(GameObject parent, int rowIndex)
+        {
+            var rowGO = new GameObject($"VerRow_{rowIndex}");
+            rowGO.transform.SetParent(parent.transform, false);
+            var rRt = rowGO.AddComponent<RectTransform>();
+            rRt.anchorMin = new Vector2(0, 1);
+            rRt.anchorMax = new Vector2(1, 1);
+            rRt.pivot = new Vector2(0.5f, 1);
+            rRt.sizeDelta = new Vector2(0, 40);
+            rRt.anchoredPosition = new Vector2(0, -rowIndex * 92);
+
+            var rImg = rowGO.AddComponent<Image>();
+            rImg.color = new Color(0.15f, 0.10f, 0.06f, 0.95f);
+            var rOutline = rowGO.AddComponent<Outline>();
+            rOutline.effectColor = new Color(0.30f, 0.22f, 0.12f, 0.90f);
+            rOutline.effectDistance = new Vector2(1.5f, -1.5f);
+
+            var verTxt = CreateText(rowGO, $"🌾 Farmer's Companion v{PluginInfo.PLUGIN_VERSION}", 14, FontStyle.Normal, TextParchmentLight, TextAnchor.MiddleLeft);
+            var vRt = verTxt.GetComponent<RectTransform>();
+            vRt.anchorMin = new Vector2(0, 0);
+            vRt.anchorMax = new Vector2(1, 1);
+            vRt.offsetMin = new Vector2(18, 0);
+            vRt.offsetMax = new Vector2(-190, 0);
+
+            var btnGO = new GameObject("Btn_CheckUpdates");
+            btnGO.transform.SetParent(rowGO.transform, false);
+            var bRt = btnGO.AddComponent<RectTransform>();
+            bRt.anchorMin = new Vector2(1, 0.5f);
+            bRt.anchorMax = new Vector2(1, 0.5f);
+            bRt.pivot = new Vector2(1, 0.5f);
+            bRt.sizeDelta = new Vector2(170, 32);
+            bRt.anchoredPosition = new Vector2(-10, 0);
+
+            var bImg = btnGO.AddComponent<Image>();
+            bImg.color = ActionTileBg;
+            var bOutline = btnGO.AddComponent<Outline>();
+            bOutline.effectColor = ActionTileBorder;
+            bOutline.effectDistance = new Vector2(1.5f, -1.5f);
+
+            var btn = btnGO.AddComponent<Button>();
+            btn.targetGraphic = bImg;
+            var bcb = btn.colors;
+            bcb.normalColor = ActionTileBg;
+            bcb.highlightedColor = new Color(0.32f, 0.48f, 0.24f, 1f);
+            bcb.pressedColor = new Color(0.15f, 0.10f, 0.06f, 1f);
+            btn.colors = bcb;
+            btn.onClick.AddListener(() =>
+            {
+                UpdateChecker.Dismissed = false;
+                UpdateChecker.Instance?.TriggerCheck();
+                CropIndicatorManager.Instance?.ShowNotification("Checking GitHub for mod updates...");
+            });
+
+            var btnTxt = CreateText(btnGO, "🔄 Check for Updates", 13, FontStyle.Bold, TextGoldHeading, TextAnchor.MiddleCenter);
+            FillParent(btnTxt.gameObject);
         }
 
         private GameObject CreatePageContainer(GameObject parent, string name)
