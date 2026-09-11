@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 using FarmersCompanion.Helpers;
@@ -562,6 +563,7 @@ namespace FarmersCompanion.UI
             CreateToggleTile(page, "Auto Water Crops", "Automatically waters dry crop plots within farming radius.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.EnableAutoWater, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.EnableAutoWater = v; }, 0);
             CreateToggleTile(page, "Animal Grass Plot Watering", "Keeps grass plots watered continuously so livestock can feed.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.EnableGrassWatering, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.EnableGrassWatering = v; }, 1);
             CreateToggleTile(page, "Smart Water Usage", "Only uses water when plots genuinely require hydration.", () => CropWaterManager.Instance != null && CropWaterManager.Instance.SmartWaterUsage, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.SmartWaterUsage = v; }, 2);
+            CreateSliderTile(page, "Farming Range Boost", 10f, 60f, "F0", "m", () => CropWaterManager.Instance != null ? CropWaterManager.Instance.WaterRadius : 30f, (v) => { if (CropWaterManager.Instance != null) CropWaterManager.Instance.WaterRadius = v; }, 3);
         }
 
         private void BuildTabPageHarvest(GameObject parent, int index)
@@ -572,6 +574,7 @@ namespace FarmersCompanion.UI
             CreateToggleTile(page, "Auto Harvest Ripe Crops", "Harvests fully mature crops directly into your inventory.", () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableAutoHarvest, (v) => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableAutoHarvest = v; }, 0);
             CreateToggleTile(page, "Auto Replant Seeds", "Picks available matching seeds from inventory and replants empty plots.", () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableAutoReplant, (v) => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableAutoReplant = v; }, 1);
             CreateToggleTile(page, "Seed Saver Mode", "Grants a 25% chance to refund / preserve the seed upon planting.", () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableSeedSaver, (v) => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableSeedSaver = v; }, 2);
+            CreateSliderTile(page, "Seed Saver Chance", 5f, 50f, "F0", "%", () => CropHarvestManager.Instance != null ? CropHarvestManager.Instance.SeedSaverChancePercent : 25f, (v) => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.SeedSaverChancePercent = v; }, 3);
 
             // Sweep Button
             var btnGO = new GameObject("Btn_MultiHarvest");
@@ -615,9 +618,12 @@ namespace FarmersCompanion.UI
             var page = CreatePageContainer(parent, $"Page_{index}");
             _tabPages[index] = page;
 
-            CreateToggleTile(page, "Accelerated Crop Growth", "Increases crop growth speed by 1.3x for balanced pacing.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableGrowthBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableGrowthBoost = v; }, 0);
-            CreateToggleTile(page, "Palm & Fruit Tree Growth Boost", "Increases palm tree and large fruit tree growth by 1.5x.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableTreeGrowthBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableTreeGrowthBoost = v; }, 1);
-            CreateToggleTile(page, "Fertilizer Surge Multiplier", "Applies an additional 1.5x speed boost to all fertilized plots.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableFertilizerBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableFertilizerBoost = v; }, 2);
+            const float rowSpacing = 88f;
+            CreateToggleTile(page, "Accelerated Crop Growth", "Increases crop growth speed by 1.3x for balanced pacing.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableGrowthBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableGrowthBoost = v; }, 0, rowSpacing);
+            CreateSliderTile(page, "Crop Growth Multiplier", 1.0f, 3.0f, "F1", "x", () => CropGrowthManager.Instance != null ? CropGrowthManager.Instance.CropGrowthMultiplier : 1.3f, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.CropGrowthMultiplier = v; }, 1, rowSpacing);
+            CreateToggleTile(page, "Palm & Fruit Tree Growth Boost", "Increases palm tree and large fruit tree growth by 1.5x.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableTreeGrowthBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableTreeGrowthBoost = v; }, 2, rowSpacing);
+            CreateSliderTile(page, "Tree Growth Multiplier", 1.0f, 3.0f, "F1", "x", () => CropGrowthManager.Instance != null ? CropGrowthManager.Instance.TreeGrowthMultiplier : 1.5f, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.TreeGrowthMultiplier = v; }, 3, rowSpacing);
+            CreateToggleTile(page, "Fertilizer Surge Multiplier", "Applies an additional 1.5x speed boost to all fertilized plots.", () => CropGrowthManager.Instance != null && CropGrowthManager.Instance.EnableFertilizerBoost, (v) => { if (CropGrowthManager.Instance != null) CropGrowthManager.Instance.EnableFertilizerBoost = v; }, 4, rowSpacing);
         }
 
         private void BuildTabPageLivestock(GameObject parent, int index)
@@ -642,7 +648,7 @@ namespace FarmersCompanion.UI
             return go;
         }
 
-        private void CreateToggleTile(GameObject parent, string title, string description, Func<bool> getter, Action<bool> setter, int rowIndex)
+        private void CreateToggleTile(GameObject parent, string title, string description, Func<bool> getter, Action<bool> setter, int rowIndex, float rowSpacing = 92f)
         {
             var tileGO = new GameObject($"Tile_{rowIndex}");
             tileGO.transform.SetParent(parent.transform, false);
@@ -650,8 +656,8 @@ namespace FarmersCompanion.UI
             tRt.anchorMin = new Vector2(0, 1);
             tRt.anchorMax = new Vector2(1, 1);
             tRt.pivot = new Vector2(0.5f, 1);
-            tRt.sizeDelta = new Vector2(0, 80);
-            tRt.anchoredPosition = new Vector2(0, -rowIndex * 92);
+            tRt.sizeDelta = new Vector2(0, rowSpacing - 12f);
+            tRt.anchoredPosition = new Vector2(0, -rowIndex * rowSpacing);
 
             var img = tileGO.AddComponent<Image>();
             img.color = new Color(0.15f, 0.10f, 0.06f, 0.95f);
@@ -724,6 +730,124 @@ namespace FarmersCompanion.UI
             rcb.pressedColor = new Color(0.10f, 0.06f, 0.03f, 1f);
             rowBtn.colors = rcb;
             rowBtn.onClick.AddListener(Toggle);
+        }
+
+        private void CreateSliderTile(GameObject parent, string title, float min, float max, string valueFormat, string valueSuffix, Func<float> getter, Action<float> setter, int rowIndex, float rowSpacing = 92f)
+        {
+            var tileGO = new GameObject($"SliderTile_{rowIndex}");
+            tileGO.transform.SetParent(parent.transform, false);
+            var tRt = tileGO.AddComponent<RectTransform>();
+            tRt.anchorMin = new Vector2(0, 1);
+            tRt.anchorMax = new Vector2(1, 1);
+            tRt.pivot = new Vector2(0.5f, 1);
+            tRt.sizeDelta = new Vector2(0, rowSpacing - 12f);
+            tRt.anchoredPosition = new Vector2(0, -rowIndex * rowSpacing);
+
+            var img = tileGO.AddComponent<Image>();
+            img.color = new Color(0.15f, 0.10f, 0.06f, 0.95f);
+            img.raycastTarget = true;
+
+            var outline = tileGO.AddComponent<Outline>();
+            outline.effectColor = new Color(0.30f, 0.22f, 0.12f, 0.90f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+
+            // Title
+            var titleTxt = CreateText(tileGO, title, 16, FontStyle.Bold, TextGreenHeading, TextAnchor.MiddleLeft);
+            var tiRt = titleTxt.GetComponent<RectTransform>();
+            tiRt.anchorMin = new Vector2(0, 0.5f);
+            tiRt.anchorMax = new Vector2(1, 1);
+            tiRt.offsetMin = new Vector2(18, 0);
+            tiRt.offsetMax = new Vector2(-120, 0);
+
+            // Value Badge (mirrors the checkbox position/style from CreateToggleTile)
+            var boxGO = new GameObject("ValueBadge");
+            boxGO.transform.SetParent(tileGO.transform, false);
+            var bRt = boxGO.AddComponent<RectTransform>();
+            bRt.anchorMin = new Vector2(1, 0.5f);
+            bRt.anchorMax = new Vector2(1, 0.5f);
+            bRt.pivot = new Vector2(1, 0.5f);
+            bRt.sizeDelta = new Vector2(86, 42);
+            bRt.anchoredPosition = new Vector2(-18, 0);
+
+            var boxImg = boxGO.AddComponent<Image>();
+            boxImg.color = CheckboxWoodBg;
+            var boxOutline = boxGO.AddComponent<Outline>();
+            boxOutline.effectColor = ActionTileBorder;
+            boxOutline.effectDistance = new Vector2(1.5f, -1.5f);
+
+            var valueTxt = CreateText(boxGO, FormatSliderValue(getter(), valueFormat, valueSuffix), 14, FontStyle.Bold, CheckmarkGreen, TextAnchor.MiddleCenter);
+            FillParent(valueTxt.gameObject);
+
+            // Slider Track (bottom half, left of the value badge)
+            var sliderGO = new GameObject("Slider");
+            sliderGO.transform.SetParent(tileGO.transform, false);
+            var sliderRt = sliderGO.AddComponent<RectTransform>();
+            sliderRt.anchorMin = new Vector2(0, 0);
+            sliderRt.anchorMax = new Vector2(1, 0.5f);
+            sliderRt.offsetMin = new Vector2(18, 10);
+            sliderRt.offsetMax = new Vector2(-120, -6);
+
+            var slider = sliderGO.AddComponent<Slider>();
+            slider.direction = Slider.Direction.LeftToRight;
+            slider.minValue = min;
+            slider.maxValue = max;
+
+            var trackGO = new GameObject("Track");
+            trackGO.transform.SetParent(sliderGO.transform, false);
+            var trackRt = trackGO.AddComponent<RectTransform>();
+            trackRt.anchorMin = new Vector2(0, 0.35f);
+            trackRt.anchorMax = new Vector2(1, 0.65f);
+            trackRt.offsetMin = Vector2.zero;
+            trackRt.offsetMax = Vector2.zero;
+            var trackImg = trackGO.AddComponent<Image>();
+            trackImg.color = CheckboxWoodBg;
+
+            var fillAreaGO = new GameObject("Fill Area");
+            fillAreaGO.transform.SetParent(sliderGO.transform, false);
+            var fillAreaRt = fillAreaGO.AddComponent<RectTransform>();
+            fillAreaRt.anchorMin = new Vector2(0, 0.35f);
+            fillAreaRt.anchorMax = new Vector2(1, 0.65f);
+            fillAreaRt.offsetMin = new Vector2(4, 0);
+            fillAreaRt.offsetMax = new Vector2(-4, 0);
+
+            var fillGO = new GameObject("Fill");
+            fillGO.transform.SetParent(fillAreaGO.transform, false);
+            var fillRt = fillGO.AddComponent<RectTransform>();
+            fillRt.anchorMin = new Vector2(0, 0);
+            fillRt.anchorMax = new Vector2(0, 1);
+            fillRt.sizeDelta = new Vector2(10, 0);
+            var fillImg = fillGO.AddComponent<Image>();
+            fillImg.color = WoodTrimAccent;
+            slider.fillRect = fillRt;
+
+            var handleAreaGO = new GameObject("Handle Slide Area");
+            handleAreaGO.transform.SetParent(sliderGO.transform, false);
+            var handleAreaRt = handleAreaGO.AddComponent<RectTransform>();
+            handleAreaRt.anchorMin = Vector2.zero;
+            handleAreaRt.anchorMax = Vector2.one;
+            handleAreaRt.offsetMin = new Vector2(8, 0);
+            handleAreaRt.offsetMax = new Vector2(-8, 0);
+
+            var handleGO = new GameObject("Handle");
+            handleGO.transform.SetParent(handleAreaGO.transform, false);
+            var handleRt = handleGO.AddComponent<RectTransform>();
+            handleRt.sizeDelta = new Vector2(18, 28);
+            var handleImg = handleGO.AddComponent<Image>();
+            handleImg.color = TabActiveBorder;
+            slider.handleRect = handleRt;
+            slider.targetGraphic = handleImg;
+
+            slider.value = getter();
+            slider.onValueChanged.AddListener((v) =>
+            {
+                setter(v);
+                valueTxt.text = FormatSliderValue(v, valueFormat, valueSuffix);
+            });
+        }
+
+        private static string FormatSliderValue(float value, string format, string suffix)
+        {
+            return value.ToString(format, CultureInfo.InvariantCulture) + suffix;
         }
 
         private void BuildFooterBar()
