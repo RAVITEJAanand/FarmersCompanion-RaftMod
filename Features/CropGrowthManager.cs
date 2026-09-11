@@ -105,7 +105,10 @@ namespace FarmersCompanion.Features
                         if (plant == null || plant.FullyGrown()) continue;
 
                         // Calculate multiplier (tree boost and crop boost are independent toggles)
-                        bool isTree = plant is Plant_Palm || (plant.growTime > 180f);
+                        // Plant.growTime is in minutes (see Plant.Awake: growTimeSec = growTime * 60f), so
+                        // this threshold is 3 minutes, not 180 minutes — otherwise no non-palm tree would
+                        // ever qualify and Tree Growth Boost would silently never apply to fruit trees.
+                        bool isTree = plant is Plant_Palm || (plant.growTime > 3f);
                         if (isTree && !EnableTreeGrowthBoost) continue;
                         if (!isTree && !EnableGrowthBoost) continue;
                         float mult = isTree ? TreeGrowthMultiplier : CropGrowthMultiplier;

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "name": "Farmer's Companion",
   "downloadUrl": "https://github.com/RAVITEJAanand/FarmersCompanion-RaftMod/releases",
   "raftModdingUrl": "https://raftmodding.com/",
-  "notes": "v1.0.1: Fixed multiplayer desync risk from clients mutating crop/livestock/inventory state without host authority, fixed Tree Growth Boost and Grass Watering being silently disabled by an unrelated toggle, fixed a per-frame reflection scan when a peer mod isn't installed, and fixed a per-frame exception when Legacy Input is disabled."
+  "notes": "v1.0.2: Fixed Auto-Collect Livestock silently destroying wool/milk instead of giving it to the player, fixed the 3D Crop Health HUD showing growth near 100% within seconds of planting (minutes/seconds unit bug), fixed Tree Growth Boost only ever applying to literal palm trees, fixed a multiplayer network-ID collision on auto-replanted crops, and added the missing automatic Toast Notifications for auto-harvest/auto-collect events."

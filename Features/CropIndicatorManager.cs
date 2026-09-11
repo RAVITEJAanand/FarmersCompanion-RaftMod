@@ -150,7 +150,10 @@ namespace FarmersCompanion.Features
                     if (hasPlant && plant != null)
                     {
                         string waterText = (anyWater && !needsWater) ? "<color=#66FF66>💧 Hydrated</color>" : "<color=#FF6666>💧 Needs Water</color>";
-                        float progress = plant.growTime > 0 ? Mathf.Clamp01(plant.GetGrowTimer() / plant.growTime) * 100f : 100f;
+                        // Plant.growTime is expressed in minutes, but GetGrowTimer() accumulates in seconds
+                        // (see Plant.Awake: growTimeSec = growTime * 60f), so the timer must be compared
+                        // against growTime * 60f or this always reads ~100% within seconds of planting.
+                        float progress = plant.growTime > 0 ? Mathf.Clamp01(plant.GetGrowTimer() / (plant.growTime * 60f)) * 100f : 100f;
                         string cropText = plant.FullyGrown() ? "<color=#FFFF44>🌾 Ready to Harvest!</color>" : $"🌱 {progress:F0}%";
                         label = $"{waterText}  {cropText}";
                     }

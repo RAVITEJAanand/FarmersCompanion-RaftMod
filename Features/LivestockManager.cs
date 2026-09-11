@@ -86,6 +86,8 @@ namespace FarmersCompanion.Features
 
                 if (_cachedAnimals.Count == 0) continue;
 
+                int collectedCount = 0;
+
                 foreach (var animal in _cachedAnimals)
                 {
                     if (animal == null) continue;
@@ -97,14 +99,26 @@ namespace FarmersCompanion.Features
                         var resource = animal.Resource;
                         if (resource != null && resource.IsReady)
                         {
-                            // Harvest resource directly into player inventory
-                            resource.HarvestResource();
+                            // HarvestResource() only depletes the resource and returns the yielded item;
+                            // it does not grant it, so it must be added to the player's inventory here
+                            // (mirrors ResourceCollector.OnHarvest's manual shear/bucket flow).
+                            var yieldItem = resource.HarvestResource();
+                            if (yieldItem != null)
+                            {
+                                player.Inventory.AddItem(yieldItem.UniqueName, 1);
+                                collectedCount++;
+                            }
                         }
                     }
                     catch
                     {
                         // Safely ignore any transient animal state
                     }
+                }
+
+                if (collectedCount > 0 && CropIndicatorManager.Instance != null)
+                {
+                    CropIndicatorManager.Instance.ShowNotification($"🐑 Auto-Collected {collectedCount} livestock resource(s) (wool/milk)!");
                 }
             }
         }

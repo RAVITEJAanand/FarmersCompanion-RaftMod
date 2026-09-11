@@ -60,7 +60,11 @@ namespace FarmersCompanion.Features
 
                 if (!EnableAutoHarvest) continue;
 
-                HarvestNearbyCrops(HarvestRadius, EnableAutoReplant);
+                int harvested = HarvestNearbyCrops(HarvestRadius, EnableAutoReplant);
+                if (harvested > 0 && CropIndicatorManager.Instance != null)
+                {
+                    CropIndicatorManager.Instance.ShowNotification($"🌾 Auto-Harvested {harvested} ripe crop(s)!");
+                }
             }
         }
         #endregion [END] LOW-FREQUENCY HARVEST COROUTINE
@@ -203,7 +207,10 @@ namespace FarmersCompanion.Features
 
                     if (plantPrefab != null)
                     {
-                        plot.PlantSeed(plantPrefab, 0, true, emptySlotIndex >= 0 ? emptySlotIndex : 0);
+                        // Every planted object needs a unique network object index (matches the game's own
+                        // Cropplot.RefillSlot pattern); a hardcoded 0 would collide with every other
+                        // auto-replanted plant's ID and break host/client plant lookups in multiplayer.
+                        plot.PlantSeed(plantPrefab, SaveAndLoad.GetUniqueObjectIndex(), true, emptySlotIndex >= 0 ? emptySlotIndex : 0);
                     }
                 }
                 catch
