@@ -135,7 +135,10 @@ namespace FarmersCompanion.Features
                         {
                             if (s == null) continue;
                             if (s.hasWater) anyWater = true;
-                            if (s.plant != null)
+                            // A harvested-but-not-replenished slot clears .busy while the stale
+                            // Plant reference (and its permanently-stuck FullyGrown()==true) lingers -
+                            // treat it as empty so the indicator doesn't keep claiming it's ready.
+                            if (s.busy && s.plant != null)
                             {
                                 hasPlant = true;
                                 plant = s.plant;

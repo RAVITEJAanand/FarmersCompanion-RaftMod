@@ -118,8 +118,14 @@ namespace FarmersCompanion.Features
 
                 for (int s = 0; s < slots.Count; s++)
                 {
-                    var plant = slots[s]?.plant;
-                    if (plant == null || !plant.FullyGrown()) continue;
+                    var slot = slots[s];
+                    var plant = slot?.plant;
+                    // Cropplot.PlantRemoved() clears slot.busy after a harvest but never
+                    // clears PlantationSlot.plant or resets Plant.fullyGrown, so a plant
+                    // that was already harvested (and not auto-replenished) keeps reporting
+                    // FullyGrown()==true forever - re-checking slot.busy here stops us from
+                    // re-"harvesting" the same dead plant every cycle indefinitely.
+                    if (slot == null || !slot.busy || plant == null || !plant.FullyGrown()) continue;
 
                     try
                     {
