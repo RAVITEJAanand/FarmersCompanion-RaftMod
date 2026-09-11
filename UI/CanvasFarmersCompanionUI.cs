@@ -218,17 +218,21 @@ namespace FarmersCompanion.UI
             }
             catch { }
 
+            bool isInGame = ComponentManager<Raft>.Value != null || ComponentManager<Network_Player>.Value != null;
+
             try
             {
                 var cic = CustomInputConfig.Instance;
                 if (cic != null && !peerModOpen && !nativeMenuOpen)
                 {
-                    cic.SwitchCurrentActionMap("Player");
+                    // Only gameplay has a "Player" action map to return to - switching to it
+                    // from the main menu (no player/world loaded) left the home screen's own
+                    // UI buttons unable to receive clicks until the game was restarted.
+                    cic.SwitchCurrentActionMap(isInGame ? "Player" : "UI");
                 }
             }
             catch { }
 
-            bool isInGame = ComponentManager<Raft>.Value != null || ComponentManager<Network_Player>.Value != null;
             if (isInGame)
             {
                 if (!peerModOpen && !nativeMenuOpen)
