@@ -208,8 +208,13 @@ namespace FarmersCompanion.Features
                 // Plant seed using Cropplot
                 try
                 {
-                    var prefabs = item.settings_buildable != null ? item.settings_buildable.GetBlockPrefabs() : null;
-                    var plantPrefab = (prefabs != null && prefabs.Length > 0) ? prefabs[0].GetComponent<Plant>() : null;
+                    // Resolve the seed's Plant prefab via PlantManager's own registry (the same
+                    // lookup the game uses for PlantComponent's held-seed interaction) instead of
+                    // digging through settings_buildable's block prefabs, which isn't how seed
+                    // items map to their Plant prefab and silently failed for some plant types
+                    // (e.g. trees) even though it happened to work for common ground crops.
+                    var pm = ComponentManager<PlantManager>.Value;
+                    var plantPrefab = pm != null ? pm.GetPlantByIndex(item.UniqueIndex) : null;
 
                     if (plantPrefab != null)
                     {
