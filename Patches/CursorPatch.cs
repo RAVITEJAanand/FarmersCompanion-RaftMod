@@ -15,6 +15,11 @@ namespace FarmersCompanion.Patches
     {
         private static PropertyInfo _scWindowProp;
         private static PropertyInfo _imWindowProp;
+        // The Mods Manager dialog and Collection QoL are menus too - without them here the camera
+        // keeps turning under an open menu, and closing this mod's window while one of those is
+        // still up re-locks the cursor out from under it.
+        private static PropertyInfo _modsMgrProp;
+        private static PropertyInfo _cqWindowProp;
         private static bool _typesResolved = false;
 
         public static bool ShouldForceCursorFree()
@@ -32,6 +37,14 @@ namespace FarmersCompanion.Patches
             if (_imWindowProp != null)
             {
                 try { if ((bool)_imWindowProp.GetValue(null)) return true; } catch { }
+            }
+            if (_modsMgrProp != null)
+            {
+                try { if ((bool)_modsMgrProp.GetValue(null)) return true; } catch { }
+            }
+            if (_cqWindowProp != null)
+            {
+                try { if ((bool)_cqWindowProp.GetValue(null)) return true; } catch { }
             }
 
             return false;
@@ -54,6 +67,19 @@ namespace FarmersCompanion.Patches
                         var imType = asm.GetType("InventoryMaster.UI.CanvasInventoryMasterUI");
                         if (imType != null)
                             _imWindowProp = imType.GetProperty("IsWindowOpen", BindingFlags.Public | BindingFlags.Static);
+                    }
+                    if (_modsMgrProp == null)
+                    {
+                        // Note: this one exposes "IsOpen", not "IsWindowOpen".
+                        var mmType = asm.GetType("SailorsCompanion.UI.CanvasInstalledModsUI");
+                        if (mmType != null)
+                            _modsMgrProp = mmType.GetProperty("IsOpen", BindingFlags.Public | BindingFlags.Static);
+                    }
+                    if (_cqWindowProp == null)
+                    {
+                        var cqType = asm.GetType("CollectionQoL.UI.CanvasCollectionQoLUI");
+                        if (cqType != null)
+                            _cqWindowProp = cqType.GetProperty("IsWindowOpen", BindingFlags.Public | BindingFlags.Static);
                     }
                 }
             }

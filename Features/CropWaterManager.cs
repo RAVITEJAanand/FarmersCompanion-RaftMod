@@ -25,6 +25,9 @@ namespace FarmersCompanion.Features
         public float WaterIntervalSeconds { get; set; } = 3.0f;
         #endregion [END] CONFIGURATION PROPERTIES
 
+        // Live counter surfaced on the settings menu's Overview tab.
+        public static int PlotsWateredThisSession = 0;
+
         private Coroutine _waterRoutine;
         private readonly List<Cropplot> _cachedPlots = new List<Cropplot>();
         private float _lastPlotsScanTime = -30f;
@@ -133,6 +136,7 @@ namespace FarmersCompanion.Features
                         // Safe fallback to direct method
                         plot.AddWater(false);
                     }
+                    PlotsWateredThisSession++;
 
                     // WaterCropplot/AddWater only mutate local state - vanilla's own callers
                     // (Cropplot's interact handler, PlantManager.WaterAllPlantsWithRain) always

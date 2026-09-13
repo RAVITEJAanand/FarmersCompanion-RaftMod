@@ -25,6 +25,10 @@ namespace FarmersCompanion.Features
         public float HarvestIntervalSeconds { get; set; } = 3.0f;
         #endregion [END] CONFIGURATION PROPERTIES
 
+        // Live counters surfaced on the settings menu's Overview tab.
+        public static int CropsHarvestedThisSession = 0;
+        public static int SeedsReplantedThisSession = 0;
+
         private Coroutine _harvestRoutine;
 
         #region [START] UNITY LIFECYCLE
@@ -160,6 +164,7 @@ namespace FarmersCompanion.Features
                         }
 
                         harvestedCount++;
+                        CropsHarvestedThisSession++;
 
                         if (replantAfterHarvest)
                         {
@@ -239,6 +244,7 @@ namespace FarmersCompanion.Features
                         // auto-replanted plant's ID and break host/client plant lookups in multiplayer.
                         uint newPlantObjectIndex = SaveAndLoad.GetUniqueObjectIndex();
                         plot.PlantSeed(plantPrefab, newPlantObjectIndex, true, emptySlotIndex >= 0 ? emptySlotIndex : 0);
+                        SeedsReplantedThisSession++;
 
                         // Cropplot.PlantSeed() only mutates local state - vanilla's own caller
                         // (Cropplot.RefillSlot) always pairs it with a Message_PlantSeed RPC using

@@ -214,7 +214,11 @@ namespace FarmersCompanion.Features
             }
 
             // 2. Draw Floating 3D Indicators above cached nearby plots
-            if (!EnableHealthIndicators || _nearbyPlotsToDraw.Count == 0) return;
+            // OnGUI always renders on top of every Canvas regardless of sortingOrder (it's a
+            // separate legacy IMGUI pass after normal rendering), so these world-projected
+            // indicators would otherwise draw straight over the settings menu whenever a crop
+            // plot happens to be behind it on screen.
+            if (!EnableHealthIndicators || _nearbyPlotsToDraw.Count == 0 || UI.CanvasFarmersCompanionUI.IsWindowOpen) return;
 
             if (_cachedCamera == null || !_cachedCamera.gameObject.activeInHierarchy)
             {
