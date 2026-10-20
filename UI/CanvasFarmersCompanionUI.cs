@@ -371,7 +371,9 @@ namespace FarmersCompanion.UI
                 _canvas = _canvasGO.AddComponent<Canvas>();
                 _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
                 _canvas.overrideSorting = true;
-                _canvas.sortingOrder = 33000; // Top-most priority (above InstalledMods 32500 and native menus)
+                // Canvas sorting order is a 16-bit value (max 32767). 33000 wrapped to a large negative
+                // number, which put the menu UNDER Raft's own UI so the game's canvases ate every click.
+                _canvas.sortingOrder = 32700; // Top-most priority (above InstalledMods 32500 and native menus)
 
                 _scaler = _canvasGO.AddComponent<CanvasScaler>();
                 _scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

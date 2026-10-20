@@ -120,6 +120,10 @@ namespace FarmersCompanion
                 {
                     ManagerGO = new GameObject("FarmersCompanion_Manager");
                     DontDestroyOnLoad(ManagerGO);
+                    // Same protection as the sibling mods' managers (and what BepInEx's own
+                    // HideManagerGameObject option sets): objects flagged this way survive the
+                    // cleanup Raft 1.1.01 does after loading the main menu.
+                    ManagerGO.hideFlags = HideFlags.HideAndDontSave;
 
                     // Attach modular managers
                     var waterMgr = ManagerGO.AddComponent<CropWaterManager>();
@@ -161,15 +165,10 @@ namespace FarmersCompanion
         }
         #endregion [END] ENSURE MANAGER GAMEOBJECT
 
-        #region [START] ONDESTROY
-        private void OnDestroy()
-        {
-            if (ManagerGO != null)
-            {
-                Destroy(ManagerGO);
-            }
-        }
-        #endregion [END] ONDESTROY
+        // No OnDestroy teardown on purpose. Raft 1.1.01 destroys BepInEx's manager GameObject (which
+        // this plugin component lives on) right after the main menu loads. The old OnDestroy then
+        // destroyed ManagerGO too, taking the F1 menu and every watering/harvest/growth/livestock
+        // feature with it - the whole mod stopped working a few seconds after launch.
     }
     // ============================================================================
     // [END] MAIN PLUGIN ENTRY: FARMER'S COMPANION
