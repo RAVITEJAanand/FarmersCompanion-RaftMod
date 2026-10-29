@@ -131,6 +131,10 @@ namespace FarmersCompanion.Features
                     // FullyGrown()==true forever - re-checking slot.busy here stops us from
                     // re-"harvesting" the same dead plant every cycle indefinitely.
                     if (slot == null || !slot.busy || plant == null || !plant.FullyGrown()) continue;
+                    // Same gate as vanilla PlantManager.HarvestPlants. Grass plots grow Plant_Grass,
+                    // which is fully grown but has playerCanHarvest = false; harvesting it anyway put
+                    // its internal Seed_Grass yield in the inventory as a blank "N/A / An item".
+                    if (!plant.harvestable || !plant.playerCanHarvest) continue;
 
                     try
                     {

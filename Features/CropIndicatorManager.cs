@@ -157,7 +157,9 @@ namespace FarmersCompanion.Features
                         // (see Plant.Awake: growTimeSec = growTime * 60f), so the timer must be compared
                         // against growTime * 60f or this always reads ~100% within seconds of planting.
                         float progress = plant.growTime > 0 ? Mathf.Clamp01(plant.GetGrowTimer() / (plant.growTime * 60f)) * 100f : 100f;
-                        string cropText = plant.FullyGrown() ? "<color=#FFFF44>🌾 Ready to Harvest!</color>" : $"🌱 {progress:F0}%";
+                        // Grass on a grass plot is animal feed the player can't harvest, so never call it ready.
+                        string cropText = !plant.playerCanHarvest ? "<color=#A0E0A0>🐑 Grass</color>"
+                                        : plant.FullyGrown() ? "<color=#FFFF44>🌾 Ready to Harvest!</color>" : $"🌱 {progress:F0}%";
                         label = $"{waterText}  {cropText}";
                     }
                     else if (isGrassPlot)
