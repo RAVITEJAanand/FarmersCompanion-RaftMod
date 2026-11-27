@@ -21,6 +21,11 @@ namespace FarmersCompanion.Features
         public bool EnableAutoReplant { get; set; } = true;
         public bool EnableSeedSaver { get; set; } = true;
         public float SeedSaverChancePercent { get; set; } = 25f; // 25% chance to save seed
+        // Bonus seeds (Patches/ExtraSeedsPatch.cs reads these)
+        public bool EnableExtraFruitSeeds { get; set; } = false;
+        public int ExtraFruitSeeds { get; set; } = 2;
+        public bool EnableExtraTreeSeeds { get; set; } = false;
+        public int ExtraTreeSeeds { get; set; } = 2;
         public float HarvestRadius { get; set; } = 30f;
         public float HarvestIntervalSeconds { get; set; } = 3.0f;
         #endregion [END] CONFIGURATION PROPERTIES
@@ -28,6 +33,7 @@ namespace FarmersCompanion.Features
         // Live counters surfaced on the settings menu's Overview tab.
         public static int CropsHarvestedThisSession = 0;
         public static int SeedsReplantedThisSession = 0;
+        public static int BonusSeedsGivenThisSession = 0;
 
         private Coroutine _harvestRoutine;
 
@@ -110,7 +116,10 @@ namespace FarmersCompanion.Features
 
             if (_cachedPlots.Count == 0) return 0;
 
-            var plantManager = ComponentManager<PlantManager>.Value;
+            // Each player has its own PlantManager. ComponentManager<PlantManager>.Value is never
+            // registered by the game (always null), which used to send every auto harvest down the
+            // fallback branch below: no harvest RPC, only the first yield item, and no bonus seeds.
+            var plantManager = player.PlantManager;
             int harvestedCount = 0;
 
             foreach (var plot in _cachedPlots)
@@ -135,6 +144,14 @@ namespace FarmersCompanion.Features
                     // which is fully grown but has playerCanHarvest = false; harvesting it anyway put
                     // its internal Seed_Grass yield in the inventory as a blank "N/A / An item".
                     if (!plant.harvestable || !plant.playerCanHarvest) continue;
+                    // Grown trees (every raft tree is a Plant_Palm with a HarvestableTree) are chopped with an
+                    // axe, never harvested: vanilla's Interact harvest can't target them because their colliders
+                    // are tagged "Tree". Harvesting one here would delete the grown tree and replant a sapling.
+                    if (plant is Plant_Palm || plant.GetComponent<HarvestableTree>() != null) continue;
+
+                    // The crop's own seed, read before Harvest() removes the plant, so Auto Replant can put
+                    // the same crop back rather than whatever seed happens to come first in the inventory.
+                    Item_Base harvestedSeed = plant.item;
 
                     try
                     {
@@ -172,7 +189,7 @@ namespace FarmersCompanion.Features
 
                         if (replantAfterHarvest)
                         {
-                            TryAutoReplant(plot, player);
+                            TryAutoReplant(plot, player, harvestedSeed);
                         }
                     }
                     catch
@@ -187,9 +204,10 @@ namespace FarmersCompanion.Features
 
         #region [START] FEATURE 18 & 28: AUTO REPLANT & SEED SAVER
         /// <summary>
-        /// Checks for empty slots in cropplot and replants available seeds from player inventory.
+        /// Replants an empty slot in the cropplot with the harvested crop's own seed from the player's
+        /// inventory. With no matching seed the slot stays empty (a different crop is never substituted).
         /// </summary>
-        private void TryAutoReplant(Cropplot plot, Network_Player player)
+        private void TryAutoReplant(Cropplot plot, Network_Player player, Item_Base harvestedSeed)
         {
             if (plot == null || player == null || player.Inventory == null) return;
 
@@ -210,7 +228,7 @@ namespace FarmersCompanion.Features
 
             if (emptySlot == null) return;
 
-            // Search player inventory for any acceptable seed/plant item
+            // Search the player's inventory for the harvested crop's seed
             var allSlots = player.Inventory.allSlots;
             if (allSlots == null) return;
 
@@ -221,14 +239,7 @@ namespace FarmersCompanion.Features
 
                 Item_Base item = slot.GetItemBase();
                 if (item == null || !plot.AcceptsPlantType(item)) continue;
-
-                // Feature 28: Seed Saver Mode — roll chance to preserve seed
-                bool saveSeed = EnableSeedSaver && (Random.Range(0f, 100f) <= SeedSaverChancePercent);
-
-                if (!saveSeed)
-                {
-                    player.Inventory.RemoveItem(item.UniqueName, 1);
-                }
+                if (harvestedSeed != null && item.UniqueIndex != harvestedSeed.UniqueIndex) continue;
 
                 // Plant seed using Cropplot
                 try
@@ -238,11 +249,20 @@ namespace FarmersCompanion.Features
                     // digging through settings_buildable's block prefabs, which isn't how seed
                     // items map to their Plant prefab and silently failed for some plant types
                     // (e.g. trees) even though it happened to work for common ground crops.
-                    var pm = ComponentManager<PlantManager>.Value;
+                    // The player's own PlantManager: ComponentManager<PlantManager>.Value is always null.
+                    var pm = player.PlantManager;
                     var plantPrefab = pm != null ? pm.GetPlantByIndex(item.UniqueIndex) : null;
 
                     if (plantPrefab != null)
                     {
+                        // Feature 28: Seed Saver Mode — roll chance to preserve seed. Only take the
+                        // seed once we know it can actually be planted.
+                        bool saveSeed = EnableSeedSaver && (Random.Range(0f, 100f) <= SeedSaverChancePercent);
+                        if (!saveSeed)
+                        {
+                            player.Inventory.RemoveItem(item.UniqueName, 1);
+                        }
+
                         // Every planted object needs a unique network object index (matches the game's own
                         // Cropplot.RefillSlot pattern); a hardcoded 0 would collide with every other
                         // auto-replanted plant's ID and break host/client plant lookups in multiplayer.

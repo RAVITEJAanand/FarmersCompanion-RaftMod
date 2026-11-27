@@ -9,7 +9,7 @@ namespace FarmersCompanion
     {
         public const string PLUGIN_GUID = "com.antigravity.farmerscompanion";
         public const string PLUGIN_NAME = "Farmer's Companion";
-        public const string PLUGIN_VERSION = "1.0.14";
+        public const string PLUGIN_VERSION = "1.0.15";
     }
     // ============================================================================
     // [END] MOD METADATA & CONSTANTS

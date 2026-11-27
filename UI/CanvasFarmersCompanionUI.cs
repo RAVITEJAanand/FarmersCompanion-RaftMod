@@ -876,8 +876,10 @@ namespace FarmersCompanion.UI
                 bool h1 = CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableAutoHarvest;
                 bool h2 = CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableAutoReplant;
                 bool h3 = CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableSeedSaver;
-                int harvestOn = (h1 ? 1 : 0) + (h2 ? 1 : 0) + (h3 ? 1 : 0);
-                SetCategoryStatus(_ovStatusHarvest, harvestOn, 3);
+                bool h4 = CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableExtraFruitSeeds;
+                bool h5 = CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableExtraTreeSeeds;
+                int harvestOn = (h1 ? 1 : 0) + (h2 ? 1 : 0) + (h3 ? 1 : 0) + (h4 ? 1 : 0) + (h5 ? 1 : 0);
+                SetCategoryStatus(_ovStatusHarvest, harvestOn, 5);
 
                 bool l1 = LivestockManager.Instance != null && LivestockManager.Instance.EnableAutoCollectLivestock;
                 bool l2 = CropIndicatorManager.Instance != null && CropIndicatorManager.Instance.EnableHealthIndicators;
@@ -982,6 +984,23 @@ namespace FarmersCompanion.UI
                 5f, 50f, 1f, "%",
                 () => CropHarvestManager.Instance != null ? CropHarvestManager.Instance.SeedSaverChancePercent : 25f,
                 v => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.SeedSaverChancePercent = v; Plugin.SeedSaverChancePercent.Value = v; }, true);
+
+            AddGroupLabel(body, "Bonus Seeds");
+            var bCard = CreateCard(body);
+            AddToggleRow(bCard, "F", "Extra Fruit Seeds", "Watermelon, pineapple and strawberry harvests also give you extra seeds.",
+                () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableExtraFruitSeeds,
+                v => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableExtraFruitSeeds = v; Plugin.EnableExtraFruitSeeds.Value = v; }, true);
+            AddStepperRow(bCard, "#", "Fruit Seeds per Harvest", "Extra seeds for each fruit crop you harvest.",
+                1f, 5f, 1f, "",
+                () => CropHarvestManager.Instance != null ? CropHarvestManager.Instance.ExtraFruitSeeds : 2f,
+                v => { int n = Mathf.Clamp(Mathf.RoundToInt(v), 1, 10); if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.ExtraFruitSeeds = n; Plugin.ExtraFruitSeeds.Value = n; }, true);
+            AddToggleRow(bCard, "T", "Extra Tree Seeds", "Chopping a tree down gives extra seeds of that tree.",
+                () => CropHarvestManager.Instance != null && CropHarvestManager.Instance.EnableExtraTreeSeeds,
+                v => { if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.EnableExtraTreeSeeds = v; Plugin.EnableExtraTreeSeeds.Value = v; }, true);
+            AddStepperRow(bCard, "#", "Tree Seeds per Felled Tree", "Extra seeds on top of what the game drops.",
+                1f, 5f, 1f, "",
+                () => CropHarvestManager.Instance != null ? CropHarvestManager.Instance.ExtraTreeSeeds : 2f,
+                v => { int n = Mathf.Clamp(Mathf.RoundToInt(v), 1, 10); if (CropHarvestManager.Instance != null) CropHarvestManager.Instance.ExtraTreeSeeds = n; Plugin.ExtraTreeSeeds.Value = n; }, true);
 
             return screen;
         }

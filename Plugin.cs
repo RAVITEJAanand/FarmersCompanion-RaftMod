@@ -36,6 +36,11 @@ namespace FarmersCompanion
         public static ConfigEntry<bool> EnableAutoReplant;
         public static ConfigEntry<bool> EnableSeedSaver;
         public static ConfigEntry<float> SeedSaverChancePercent;
+        public static ConfigEntry<bool> EnableExtraFruitSeeds;
+        public static ConfigEntry<int> ExtraFruitSeeds;
+        public static ConfigEntry<string> ExtraFruitSeedCrops;
+        public static ConfigEntry<bool> EnableExtraTreeSeeds;
+        public static ConfigEntry<int> ExtraTreeSeeds;
 
         // Features 19, 20, 25: Growth
         public static ConfigEntry<bool> EnableGrowthBoost;
@@ -75,6 +80,11 @@ namespace FarmersCompanion
             EnableAutoReplant = Config.Bind("Features.Harvesting", "EnableAutoReplant", true, "Automatically replant seeds after harvesting.");
             EnableSeedSaver = Config.Bind("Features.Harvesting", "EnableSeedSaver", true, "Chance to preserve/refund seed upon replanting.");
             SeedSaverChancePercent = Config.Bind("Features.Harvesting", "SeedSaverChancePercent", 25f, "Percentage chance (0-100) to save seed.");
+            EnableExtraFruitSeeds = Config.Bind("Features.Harvesting", "EnableExtraFruitSeeds", false, "Give extra seeds when a fruit crop is harvested (by hand, Auto Harvest or Multi-Harvest).");
+            ExtraFruitSeeds = Config.Bind("Features.Harvesting", "ExtraFruitSeeds", 2, new ConfigDescription("Extra seeds per harvested fruit crop.", new AcceptableValueRange<int>(1, 10)));
+            ExtraFruitSeedCrops = Config.Bind("Features.Harvesting", "ExtraFruitSeedCrops", "Watermelon,Pineapple,Strawberry", "Comma-separated crops that count as fruit for Extra Fruit Seeds (matched against the seed's item name, e.g. Seed_Watermelon).");
+            EnableExtraTreeSeeds = Config.Bind("Features.Harvesting", "EnableExtraTreeSeeds", false, "Give extra tree seeds when you chop a tree down (palm, mango, banana, pine, birch).");
+            ExtraTreeSeeds = Config.Bind("Features.Harvesting", "ExtraTreeSeeds", 2, new ConfigDescription("Extra seeds per felled tree, on top of what the game gives.", new AcceptableValueRange<int>(1, 10)));
 
             // Growth
             EnableGrowthBoost = Config.Bind("Features.Growth", "EnableGrowthBoost", true, "Enable balanced growth speed multiplier.");
@@ -94,7 +104,7 @@ namespace FarmersCompanion
             // General
             CheckForUpdates = Config.Bind("General", "CheckForUpdates", true, "Check GitHub for new updates on startup.");
 
-            // Apply Harmony Patches (Cursor Unlock & Camera Freeze)
+            // Apply Harmony Patches (Cursor Unlock & Camera Freeze, Bonus Fruit & Tree Seeds)
             try
             {
                 new Harmony(PluginInfo.PLUGIN_GUID).PatchAll();
@@ -137,6 +147,10 @@ namespace FarmersCompanion
                     harvestMgr.EnableAutoReplant = EnableAutoReplant.Value;
                     harvestMgr.EnableSeedSaver = EnableSeedSaver.Value;
                     harvestMgr.SeedSaverChancePercent = SeedSaverChancePercent.Value;
+                    harvestMgr.EnableExtraFruitSeeds = EnableExtraFruitSeeds.Value;
+                    harvestMgr.ExtraFruitSeeds = ExtraFruitSeeds.Value;
+                    harvestMgr.EnableExtraTreeSeeds = EnableExtraTreeSeeds.Value;
+                    harvestMgr.ExtraTreeSeeds = ExtraTreeSeeds.Value;
                     harvestMgr.HarvestRadius = WaterRadius.Value;
 
                     var growthMgr = ManagerGO.AddComponent<CropGrowthManager>();

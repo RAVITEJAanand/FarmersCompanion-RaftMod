@@ -1,7 +1,7 @@
 {
-  "version": "1.0.14",
+  "version": "1.0.15",
   "name": "Farmer's Companion",
   "downloadUrl": "https://github.com/RAVITEJAanand/FarmersCompanion-RaftMod/releases",
   "raftModdingUrl": "https://raftmodding.com/",
-  "notes": "v1.0.14: Auto Harvest no longer harvests the grass on grass plots. The game does not let players harvest that grass, and doing it anyway filled the inventory with a blank N/A item. Grass plots now show Grass instead of Ready to Harvest."
+  "notes": "v1.0.15: New Bonus Seeds options on the Harvest & Seeds tab (off by default). Extra Fruit Seeds gives 1-5 extra seeds each time you harvest a watermelon, pineapple or strawberry, by hand, with Auto Harvest or with Multi-Harvest. Extra Tree Seeds gives 1-5 extra seeds of that tree when you chop a palm, mango, banana, pine or birch tree down. Fixes: Auto Harvest now uses the game's own harvest, so you get the full yield and other players see the crop disappear, and it leaves grown trees alone (trees are for the axe). Auto Replant works again (before, it took the seed but planted nothing) and puts the same crop back: a harvested pineapple is replanted with a pineapple seed, and with none in your inventory the slot stays empty."
 }

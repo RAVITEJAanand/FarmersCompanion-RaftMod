@@ -47,6 +47,7 @@ It handles features 16 through 30, eliminating repetitive manual chores like wat
 11. **💡 Smart Water Usage (Feature 26):** Only waters plots that are genuinely dry (`SlotsNeedWater()`), preventing waste.
 12. **🧹 Multi-Harvest Mode (Feature 27):** One-click button in the `F1` menu to instantly sweep and harvest all ripe crops across your farm.
 13. **🌰 Seed Saver Mode (Feature 28):** Configurable chance (default 25%) to preserve/refund planted seeds.
+   - **Bonus Seeds (v1.0.15):** Optional extra seeds (1-5) from watermelon, pineapple and strawberry harvests, and from every tree you chop down.
 14. **🔔 Farming Notifications (Feature 29):** Non-intrusive on-screen toasts when crops are ripe or livestock products are ready.
 15. **⚙️ Farming Area Toggle (Feature 30):** Full in-game control canvas via **`F1`** with individual feature toggles and sliders.
 
